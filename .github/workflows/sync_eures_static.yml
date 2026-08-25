@@ -1,0 +1,34 @@
+name: Sincronizare Feeds Statice EURES (UE)
+
+on:
+  schedule:
+    # Rulează de 2 ori pe zi: 05:00 și 17:00 ora României (02:00 și 14:00 UTC)
+    - cron: '0 2,14 * * *'
+  workflow_dispatch: # Permite declanșarea manuală din interfața GitHub Actions
+
+permissions:
+  contents: write
+
+jobs:
+  build-static-eures-feeds:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Rulare Generator Feeds EURES (100% English Jobs)
+        run: |
+          node eures_static_sync.mjs
+
+      - name: Commit & Push Feeds Statice
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/*.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(eures): actualizare automată fluxuri statice joburi UE" && git push)
