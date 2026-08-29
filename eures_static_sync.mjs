@@ -822,6 +822,14 @@ async function runSync() {
         await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json', updatedEvents, `Sync EU Market Events - ${now.toISOString().split('T')[0]}`);
         await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History Checkpoint - ${now.toISOString().split('T')[0]}`);
     }
+
+    // 5. Automatic jsDelivr Edge CDN Cache Purge (Ensures 0 delay for all global users)
+    try {
+        console.log('\n⚡ Purging jsDelivr Edge CDN cache for instant global update...');
+        const cdnFiles = ['jobs_all.json', 'jobs_de.json', 'jobs_nl.json', 'jobs_be.json', 'jobs_at.json', 'jobs_dk.json', 'jobs_fr.json'];
+        await Promise.all(cdnFiles.map(f => fetch(`https://purge.jsdelivr.net/gh/zmd2508/euzmj262508@main/data/${f}`).catch(() => {})));
+        console.log('✅ jsDelivr Edge CDN cache purged successfully.');
+    } catch (_) {}
 }
 
 runSync();
