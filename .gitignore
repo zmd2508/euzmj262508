@@ -1,0 +1,4 @@
+node_modules/
+.env
+data/eu_market_events.json
+data/eu_sync_history.json
