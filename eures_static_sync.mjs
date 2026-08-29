@@ -246,15 +246,16 @@ function detectAccommodationOffer(description, title = '') {
         if (rx.test(text)) return false;
     }
 
-    // 2. VERIFIED POSITIVE ACCOMMODATION OFFERS
+    // 2. VERIFIED POSITIVE ACCOMMODATION & RELOCATION OFFERS
     const verifiedPositivePatterns = [
         /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|covered|available|offered)\b/i,
         /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges)\s+(?:free\s+|furnished\s+|single[- ]room\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
         /\b(?:free|furnished|single[- ]room|private[- ]room|staff|company|snf[- ]certified)\s+(?:accommodation|housing|apartment|living space)\b/i,
-        /\bhelp\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live)\b/i,
-        /\b(?:assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing)\b/i,
-        /\brelocation\s+package\s+(?:includes?|including|with)\s+(?:accommodation|housing|apartment)\b/i,
+        /\b(?:help|assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live|a flat|an apartment|wohnungssuche)\b/i,
+        /\brelocation\s+(?:package|support|assistance|allowance|bonus|budget|service)\b/i,
+        /\bhousing\s+(?:support|allowance|assistance|subsidy)\b/i,
         /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i,
+        /\btemporary\s+(?:housing|accommodation|apartment|living)\b/i,
         /\baccommodation\s+(?:near\s+the\s+workplace|close\s+to\s+work)\b/i,
         /\bhelp\s+with\s+relocation\s+(?:including|and)\s+(?:accommodation|housing)\b/i
     ];
