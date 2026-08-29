@@ -211,7 +211,7 @@ function extractEuroSalary(rawText) {
 }
 
 function detectAccommodationOffer(description, title = '') {
-    if (!description) return false;
+    if (!description) return { hasAccommodation: false, type: null };
     const text = `${title || ''}\n${description || ''}`.toLowerCase();
 
     // 1. HARD DISQUALIFIERS (False Positives & Sneaky Edge Cases)
@@ -219,15 +219,15 @@ function detectAccommodationOffer(description, title = '') {
     // Edge Case A: 'Reasonable accommodation' (US/Corporate Disability legal boilerplate)
     const isOnlyDisabilityAccommodation = 
         /reasonable accommodation/i.test(text) && 
-        !/\b(?:housing|apartment|single[- ]room|rent|living space|snf)\b/i.test(text) &&
+        !/\b(?:housing|apartment|single[- ]room|rent|living space|snf|relocation)\b/i.test(text) &&
         !/\b(?:accommodation (?:provided|included|arranged|available|offered))\b/i.test(text.replace(/reasonable accommodation/gi, ''));
 
-    if (isOnlyDisabilityAccommodation) return false;
+    if (isOnlyDisabilityAccommodation) return { hasAccommodation: false, type: null };
 
     // Edge Case B: Hotel describing guest rooms rather than staff housing
     if (/offers? (?:luxury|exclusive|overnight|guest|hotel) accommodation to (?:guests|travelers|visitors|clients)/i.test(text) ||
         /accommodation for guests/i.test(text)) {
-        return false;
+        return { hasAccommodation: false, type: null };
     }
 
     // Edge Case C: Explicit Negations or 'Own Accommodation' requirements
@@ -243,28 +243,38 @@ function detectAccommodationOffer(description, title = '') {
     ];
 
     for (const rx of strictDisqualifiers) {
-        if (rx.test(text)) return false;
+        if (rx.test(text)) return { hasAccommodation: false, type: null };
     }
 
-    // 2. VERIFIED POSITIVE ACCOMMODATION & RELOCATION OFFERS
-    const verifiedPositivePatterns = [
+    // 2. TIER 1: DIRECT PHYSICAL HOUSING (Ready-to-move-in Agency/Employer Room, Bed or Bungalow)
+    const tier1HousingPatterns = [
         /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|covered|available|offered)\b/i,
         /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges)\s+(?:free\s+|furnished\s+|single[- ]room\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
         /\b(?:free|furnished|single[- ]room|private[- ]room|staff|company|snf[- ]certified)\s+(?:accommodation|housing|apartment|living space)\b/i,
-        /\b(?:help|assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live|a flat|an apartment|wohnungssuche)\b/i,
+        /\b(?:snf|snf-norm|norma snf)\b/i,
+        /\b(?:huisvesting|woonruimte|onderdak)\s+(?:beschikbaar|geregeld|inbegrepen|voorzien)\b/i,
+        /\b(?:unterkunft)\s+(?:gestellt|inklusive|bereitgestellt)\b/i,
+        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i
+    ];
+
+    for (const rx of tier1HousingPatterns) {
+        if (rx.test(text)) return { hasAccommodation: true, type: 'housing' };
+    }
+
+    // 3. TIER 2: RELOCATION SUPPORT & HOUSING ALLOWANCES (Financial / Concierge Relocation Package)
+    const tier2RelocationPatterns = [
         /\brelocation\s+(?:package|support|assistance|allowance|bonus|budget|service)\b/i,
         /\bhousing\s+(?:support|allowance|assistance|subsidy)\b/i,
-        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i,
+        /\b(?:help|assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live|a flat|an apartment|wohnungssuche)\b/i,
         /\btemporary\s+(?:housing|accommodation|apartment|living)\b/i,
-        /\baccommodation\s+(?:near\s+the\s+workplace|close\s+to\s+work)\b/i,
         /\bhelp\s+with\s+relocation\s+(?:including|and)\s+(?:accommodation|housing)\b/i
     ];
 
-    for (const rx of verifiedPositivePatterns) {
-        if (rx.test(text)) return true;
+    for (const rx of tier2RelocationPatterns) {
+        if (rx.test(text)) return { hasAccommodation: true, type: 'relocation' };
     }
 
-    return false;
+    return { hasAccommodation: false, type: null };
 }
 
 function extractLocationDetails(job, countryObj) {
@@ -532,7 +542,7 @@ async function fetchJobsForCountry(countryObj) {
             const locationStr = extractLocationDetails(job, countryObj);
             const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
             const inferredDomain = inferDomain(cleanTitle, cleanDesc);
-            const hasAccommodation = detectAccommodationOffer(cleanDesc, cleanTitle);
+            const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
 
             const directEuresUrl = `https://europa.eu/eures/portal/jv-se/jv-details/${encodeURIComponent(job.id)}?lang=en`;
 
@@ -546,7 +556,8 @@ async function fetchJobsForCountry(countryObj) {
                 description: cleanDesc,
                 minimum_salary: salaryMin,
                 salary_type: salaryType,
-                has_accommodation: hasAccommodation,
+                has_accommodation: accInfo.hasAccommodation,
+                accommodation_type: accInfo.type,
                 job_expiry_date: job.lastModificationDate ? new Date(job.lastModificationDate + 30 * 86400000).toISOString().split('T')[0] : null,
                 open_positions: job.numberOfPosts || 1,
                 source_aggregator: 'EURES',
