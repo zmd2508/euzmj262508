@@ -632,7 +632,58 @@ async function fetchJobsForCountry(countryObj) {
         console.log(`  💾 Saved (${allCountryJobs.length} verified jobs) to ${filePath} (${sizeKb} KB)`);
     });
 
+    saveShardedCountryFeed(allCountryJobs, countryObj.code, countryObj.name, countryObj.key);
+
     return allCountryJobs;
+}
+
+function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
+    const totalCount = jobs.length;
+    const PAGE_SIZE = 20;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+    const now = new Date().toISOString();
+
+    const metaPayload = {
+        country: countryName,
+        countryCode: countryKey,
+        totalLiveMarketCount: totalCount,
+        pageSize: PAGE_SIZE,
+        totalPages: totalPages,
+        updatedAt: now
+    };
+
+    DATA_DIRS.forEach(dir => {
+        try {
+            const metaPath = path.join(dir, `meta_${countryCode.toLowerCase()}.json`);
+            fs.writeFileSync(metaPath, JSON.stringify(metaPayload, null, 2), 'utf8');
+
+            const pagesDir = path.join(dir, 'pages', countryCode.toLowerCase());
+            if (!fs.existsSync(pagesDir)) {
+                fs.mkdirSync(pagesDir, { recursive: true });
+            }
+
+            for (let p = 1; p <= totalPages; p++) {
+                const start = (p - 1) * PAGE_SIZE;
+                const end = start + PAGE_SIZE;
+                const pageJobs = jobs.slice(start, end);
+
+                const pagePayload = {
+                    country: countryName,
+                    countryCode: countryKey,
+                    page: p,
+                    pageSize: PAGE_SIZE,
+                    totalPages: totalPages,
+                    totalLiveMarketCount: totalCount,
+                    jobs: pageJobs
+                };
+
+                const pagePath = path.join(pagesDir, `${p}.json`);
+                fs.writeFileSync(pagePath, JSON.stringify(pagePayload), 'utf8');
+            }
+        } catch (e) {
+            console.warn(`Error writing sharded pages for ${countryCode}:`, e.message);
+        }
+    });
 }
 
 async function pushToPrivateRepo(pat, targetRepo, filePathInRepo, contentObj, commitMessage) {
@@ -718,6 +769,9 @@ async function runSync() {
         const allPath = path.join(dir, 'jobs_all.json');
         fs.writeFileSync(allPath, JSON.stringify(allPayload), 'utf8');
     });
+
+    saveShardedCountryFeed(allCombined, 'all', 'Toată Europa', 'ALL');
+
     console.log(`\n🎉 Full Sync Complete! Total European Jobs Cached: ${allCombined.length}`);
 
     // 2. Compute Diff & Market Events
