@@ -686,6 +686,27 @@ function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
     });
 }
 
+async function fetchFromPrivateRepo(pat, targetRepo, filePathInRepo) {
+    if (!pat || !targetRepo || !targetRepo.includes('/')) return null;
+    const [owner, repo] = targetRepo.split('/');
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePathInRepo}`;
+    const headers = {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github.v3.raw',
+        'User-Agent': 'Eures-Private-Sync-Bot'
+    };
+    try {
+        const res = await fetch(url, { headers });
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                return data;
+            }
+        }
+    } catch (_) {}
+    return null;
+}
+
 async function pushToPrivateRepo(pat, targetRepo, filePathInRepo, contentObj, commitMessage) {
     if (!pat || !targetRepo || !targetRepo.includes('/')) return false;
     const [owner, repo] = targetRepo.split('/');
@@ -835,13 +856,34 @@ async function runSync() {
     let existingEvents = [];
     let existingHistory = [];
 
+    const privatePat = process.env.PRIVATE_REPO_PAT;
+    const privateTarget = process.env.PRIVATE_REPO_TARGET;
+
+    // A. Fetch existing history from Private Repo first (since private files are gitignored locally)
+    if (privatePat && privateTarget) {
+        console.log(`📥 Fetching existing rolling history from private vault (${privateTarget})...`);
+        const [vaultEvents, vaultHistory] = await Promise.all([
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json'),
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json')
+        ]);
+        if (Array.isArray(vaultEvents) && vaultEvents.length > 0) {
+            existingEvents = vaultEvents;
+            console.log(`  Found ${existingEvents.length} existing market events in private vault.`);
+        }
+        if (Array.isArray(vaultHistory) && vaultHistory.length > 0) {
+            existingHistory = vaultHistory;
+            console.log(`  Found ${existingHistory.length} historical sync checkpoints in private vault.`);
+        }
+    }
+
+    // B. Fallback to local files if available
     const eventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
     const historyPath = primaryDir ? path.join(primaryDir, 'eu_sync_history.json') : null;
 
-    if (eventsPath && fs.existsSync(eventsPath)) {
+    if (existingEvents.length === 0 && eventsPath && fs.existsSync(eventsPath)) {
         try { existingEvents = JSON.parse(fs.readFileSync(eventsPath, 'utf8')); } catch (_) {}
     }
-    if (historyPath && fs.existsSync(historyPath)) {
+    if (existingHistory.length === 0 && historyPath && fs.existsSync(historyPath)) {
         try { existingHistory = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) {}
     }
 
