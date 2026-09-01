@@ -8,10 +8,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Support standalone repo ./data as well as parent UI/data
+// Standalone repo data directory (pushed to GitHub CDN)
 const DATA_DIRS = [
-    path.join(__dirname, 'data'),
-    path.join(__dirname, '..', 'UI', 'data')
+    path.join(__dirname, 'data')
 ].filter(d => {
     try {
         if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
@@ -82,6 +81,7 @@ function cleanHtmlDescription(rawHtml) {
     text = text.replace(/<h[1-6][^>]*>/gi, '\n\n');
     text = text.replace(/<\/h[1-6]>/gi, '\n');
     text = text.replace(/<[^>]*>/g, '');
+    text = text.replace(/<[a-z0-9\/\s]*$/gi, '');
 
     text = text
         .replace(/&nbsp;/gi, ' ')
