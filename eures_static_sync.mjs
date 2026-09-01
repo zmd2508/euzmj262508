@@ -686,6 +686,118 @@ function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
     });
 }
 
+// ==========================================
+// ⚡ FLAT TUPLE ENCODER / DECODER
+// ==========================================
+
+function encodeEventsToFlatTuples(events) {
+    const typeSet = new Set(['JOB_ADDED', 'JOB_FILLED_OR_CLOSED', 'JOB_EXPIRED', 'POSITIONS_DECREASED', 'POSITIONS_INCREASED']);
+    const countrySet = new Set(['NL', 'DE', 'BE', 'AT', 'DK', 'FR', 'OTHER']);
+    const domainSet = new Set();
+    const employerSet = new Set();
+    const occupationSet = new Set();
+    const salarySet = new Set(['Nespecificat']);
+
+    events.forEach(e => {
+        if (e.event_type) typeSet.add(e.event_type);
+        if (e.domain) domainSet.add(e.domain);
+        if (e.employer_name) employerSet.add(e.employer_name);
+        if (e.occupation) occupationSet.add(e.occupation);
+        if (e.salary) salarySet.add(e.salary);
+    });
+
+    const types = Array.from(typeSet);
+    const countries = Array.from(countrySet);
+    const domains = Array.from(domainSet);
+    const employers = Array.from(employerSet);
+    const occupations = Array.from(occupationSet);
+    const salaries = Array.from(salarySet);
+
+    const typeMap = new Map(types.map((v, i) => [v, i]));
+    const countryMap = new Map(countries.map((v, i) => [v, i]));
+    const domainMap = new Map(domains.map((v, i) => [v, i]));
+    const employerMap = new Map(employers.map((v, i) => [v, i]));
+    const occupationMap = new Map(occupations.map((v, i) => [v, i]));
+    const salaryMap = new Map(salaries.map((v, i) => [v, i]));
+
+    const helperCountry = (loc) => {
+        const u = (loc || '').toUpperCase();
+        if (u.includes('OLANDA') || u.includes('NETHERLANDS')) return 'NL';
+        if (u.includes('GERMANIA') || u.includes('GERMANY')) return 'DE';
+        if (u.includes('BELGIA') || u.includes('BELGIUM')) return 'BE';
+        if (u.includes('AUSTRIA')) return 'AT';
+        if (u.includes('DANEMARCA') || u.includes('DENMARK')) return 'DK';
+        if (u.includes('FRANȚA') || u.includes('FRANCE') || u.includes('FRANTA')) return 'FR';
+        return 'OTHER';
+    };
+
+    const flatTuples = events.map(e => {
+        const ts = e.created_at ? Math.floor(new Date(e.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000);
+        const tIdx = typeMap.has(e.event_type) ? typeMap.get(e.event_type) : 0;
+        const cCode = helperCountry(e.location);
+        const cIdx = countryMap.has(cCode) ? countryMap.get(cCode) : 6;
+        const dIdx = domainMap.has(e.domain) ? domainMap.get(e.domain) : -1;
+        const empIdx = employerMap.has(e.employer_name) ? employerMap.get(e.employer_name) : -1;
+        const occIdx = occupationMap.has(e.occupation) ? occupationMap.get(e.occupation) : -1;
+        const delta = e.delta_positions || 1;
+        const salIdx = salaryMap.has(e.salary) ? salaryMap.get(e.salary) : 0;
+        const housing = e.has_accommodation ? 1 : 0;
+        const isAgency = e.is_agency ? 1 : 0;
+        const id = e.id || '';
+
+        return [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id];
+    });
+
+    return {
+        version: 1,
+        updated_at: new Date().toISOString(),
+        total_events: flatTuples.length,
+        dict: {
+            types,
+            countries,
+            domains,
+            employers,
+            occupations,
+            salaries
+        },
+        events: flatTuples
+    };
+}
+
+function decodeFlatTuplesToEvents(flatObj) {
+    if (!flatObj || !flatObj.dict || !Array.isArray(flatObj.events)) return [];
+    const { types, countries, domains, employers, occupations, salaries } = flatObj.dict;
+
+    const countryLabels = {
+        'NL': 'Olanda',
+        'DE': 'Germania',
+        'BE': 'Belgia',
+        'AT': 'Austria',
+        'DK': 'Danemarca',
+        'FR': 'Franța',
+        'OTHER': 'UE'
+    };
+
+    return flatObj.events.map(t => {
+        const [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id] = t;
+        const cCode = countries[cIdx] || 'OTHER';
+        return {
+            id: id || `eures-${ts}`,
+            created_at: new Date(ts * 1000).toISOString(),
+            event_type: types[tIdx] || 'JOB_ADDED',
+            country_code: cCode,
+            location: countryLabels[cCode] || cCode,
+            domain: dIdx >= 0 ? (domains[dIdx] || 'Altele') : 'Altele',
+            employer_name: empIdx >= 0 ? (employers[empIdx] || 'Angajator Direct UE') : 'Angajator Direct UE',
+            occupation: occIdx >= 0 ? (occupations[occIdx] || 'Ofertă') : 'Ofertă',
+            delta_positions: delta,
+            salary: salIdx >= 0 ? (salaries[salIdx] || 'Nespecificat') : 'Nespecificat',
+            has_accommodation: housing === 1,
+            is_agency: isAgency === 1
+        };
+    });
+}
+
 async function fetchFromPrivateRepo(pat, targetRepo, filePathInRepo) {
     if (!pat || !targetRepo || !targetRepo.includes('/')) return null;
     const [owner, repo] = targetRepo.split('/');
@@ -699,9 +811,7 @@ async function fetchFromPrivateRepo(pat, targetRepo, filePathInRepo) {
         const res = await fetch(url, { headers });
         if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data)) {
-                return data;
-            }
+            return data;
         }
     } catch (_) {}
     return null;
@@ -830,7 +940,6 @@ async function runSync() {
         const key = j.id || `eures-${j.rawEuresId}`;
         if (!newJobMap.has(key)) {
             filledCount++;
-            // Calculate days on market if job_expiry_date or creation was known, else default ~14
             const daysActive = j.job_expiry_date ? Math.max(1, Math.min(30, Math.floor((now - new Date(j.job_expiry_date)) / 86400000) + 30)) : 14;
 
             newEvents.push({
@@ -862,14 +971,20 @@ async function runSync() {
     // A. Fetch existing history from Private Repo first (since private files are gitignored locally)
     if (privatePat && privateTarget) {
         console.log(`📥 Fetching existing rolling history from private vault (${privateTarget})...`);
-        const [vaultEvents, vaultHistory] = await Promise.all([
+        const [vaultFlatEvents, vaultLegacyEvents, vaultHistory] = await Promise.all([
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json'),
             fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json'),
             fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json')
         ]);
-        if (Array.isArray(vaultEvents) && vaultEvents.length > 0) {
-            existingEvents = vaultEvents;
-            console.log(`  Found ${existingEvents.length} existing market events in private vault.`);
+        
+        if (vaultFlatEvents && vaultFlatEvents.dict && Array.isArray(vaultFlatEvents.events)) {
+            existingEvents = decodeFlatTuplesToEvents(vaultFlatEvents);
+            console.log(`  Decoded ${existingEvents.length} existing market events from Flat Tuple vault.`);
+        } else if (Array.isArray(vaultLegacyEvents) && vaultLegacyEvents.length > 0) {
+            existingEvents = vaultLegacyEvents;
+            console.log(`  Found ${existingEvents.length} existing market events in legacy vault.`);
         }
+
         if (Array.isArray(vaultHistory) && vaultHistory.length > 0) {
             existingHistory = vaultHistory;
             console.log(`  Found ${existingHistory.length} historical sync checkpoints in private vault.`);
@@ -877,17 +992,26 @@ async function runSync() {
     }
 
     // B. Fallback to local files if available
-    const eventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
+    const flatEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events_flat.json') : null;
+    const legacyEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
     const historyPath = primaryDir ? path.join(primaryDir, 'eu_sync_history.json') : null;
 
-    if (existingEvents.length === 0 && eventsPath && fs.existsSync(eventsPath)) {
-        try { existingEvents = JSON.parse(fs.readFileSync(eventsPath, 'utf8')); } catch (_) {}
+    if (existingEvents.length === 0 && flatEventsPath && fs.existsSync(flatEventsPath)) {
+        try {
+            const raw = JSON.parse(fs.readFileSync(flatEventsPath, 'utf8'));
+            existingEvents = decodeFlatTuplesToEvents(raw);
+        } catch (_) {}
+    }
+    if (existingEvents.length === 0 && legacyEventsPath && fs.existsSync(legacyEventsPath)) {
+        try { existingEvents = JSON.parse(fs.readFileSync(legacyEventsPath, 'utf8')); } catch (_) {}
     }
     if (existingHistory.length === 0 && historyPath && fs.existsSync(historyPath)) {
         try { existingHistory = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) {}
     }
 
-    const updatedEvents = [...newEvents, ...existingEvents].slice(0, 1500);
+    // Cumulative full events list without goldfish cap (stores 100% of events)
+    const cumulativeEvents = [...newEvents, ...existingEvents];
+    const flatPayload = encodeEventsToFlatTuples(cumulativeEvents);
 
     const historyPoint = {
         date: now.toISOString().split('T')[0],
@@ -899,24 +1023,22 @@ async function runSync() {
         avg_salary: 16.64,
         avg_velocity_days: 16.5
     };
-    const updatedHistory = [historyPoint, ...existingHistory].slice(0, 365);
+    const updatedHistory = [historyPoint, ...existingHistory];
 
     // Save locally
     DATA_DIRS.forEach(dir => {
         try {
-            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(updatedEvents, null, 2), 'utf8');
+            fs.writeFileSync(path.join(dir, 'eu_market_events_flat.json'), JSON.stringify(flatPayload), 'utf8');
+            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(cumulativeEvents.slice(0, 500), null, 2), 'utf8');
             fs.writeFileSync(path.join(dir, 'eu_sync_history.json'), JSON.stringify(updatedHistory, null, 2), 'utf8');
         } catch (_) {}
     });
 
     // 4. Push to Private Repo if GitHub Secrets exist
-    const privatePat = process.env.PRIVATE_REPO_PAT;
-    const privateTarget = process.env.PRIVATE_REPO_TARGET;
-
     if (privatePat && privateTarget) {
-        console.log(`\n🔒 Pushing intelligence to private repository (${privateTarget})...`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json', updatedEvents, `Sync EU Market Events - ${now.toISOString().split('T')[0]}`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History Checkpoint - ${now.toISOString().split('T')[0]}`);
+        console.log(`\n🔒 Pushing Flat Tuple intelligence to private repository (${privateTarget})...`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json', flatPayload, `Sync EU Flat Events (${cumulativeEvents.length} events) - ${now.toISOString().split('T')[0]}`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History (${updatedHistory.length} checkpoints) - ${now.toISOString().split('T')[0]}`);
     }
 
     // 5. Automatic jsDelivr Edge CDN Cache Purge (Ensures 0 delay for all global users)
