@@ -35,3 +35,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore(eures): actualizare automată fluxuri statice joburi UE" && git push)
+
+      - name: Notificare Actualizare Cache Vercel
+        run: |
+          curl -s -f "https://www.ziarulmuncii.ro/api/counts?refresh=1" || true
