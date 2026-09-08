@@ -42,32 +42,180 @@ const TARGET_COUNTRIES = [
     { code: 'fr', name: 'Franța', flag: '🇫🇷', key: 'FR', maxPages: 30 }
 ];
 
-const DOMAIN_RULES = [
-    { name: 'IT', regex: /\b(software|developer|engineer|frontend|backend|devops|programmer|python|java|javascript|react|node|cloud|data engineer|qa|fullstack|cyber|database|architect|sysadmin|scrum master|product owner)\b/i },
-    { name: 'Construcții', regex: /\b(construction|carpenter|electrician|plumber|builder|mason|welder|painter|roofer|pipe|installation|scaffolding|fitter|hvac|bouwvak|lasser|elektricien|monteur)\b/i },
-    { name: 'Producție', regex: /\b(production|assembly|manufacturing|operator|factory|warehouse|packer|picker|packaging|machine operator|productie|magazijn|inpakker)\b/i },
-    { name: 'Transporturi', regex: /\b(driver|truck|courier|logistics|forklift|transport|chauffeur|delivery driver|package delivery|parcel delivery|reach truck|heftruck|vrachtwagenchauffeur|distributie)\b/i },
-    { name: 'HoReCa', regex: /\b(cook|chef|kitchen|hotel|restaurant|waiter|bartender|hospitality|dishwasher|catering|bediening|kok|afwasser)\b/i },
-    { name: 'Inginerie', regex: /\b(engineer|technician|mechanical|electrical|automation|cnc|maintenance|field service|robotics|quality|ingenieur)\b/i },
-    { name: 'Domeniul Medical', regex: /\b(nurse|caregiver|doctor|healthcare|medical|hospital|dental|care assistant|clinic|verpleegkundige|zorg)\b/i },
-    { name: 'Financiar-Contabil', regex: /\b(accountant|finance|accounting|payroll|auditor|financial|controller|boekhouder)\b/i },
-    { name: 'Marketing', regex: /\b(marketing|seo|content|digital marketing|copywriter|social media|brand)\b/i },
-    { name: 'Administrativ', regex: /\b(administrative|secretary|office|assistant|receptionist|customer support|call center|klantenservice)\b/i },
-    { name: 'Educație', regex: /\b(teacher|trainer|educator|instructor|tutor|professor|docent)\b/i },
-    { name: 'Pază și Protecție', regex: /\b(security|guard|protection|surveillance|safety officer|beveiliger)\b/i },
-    { name: 'Agricultură', regex: /\b(agriculture|farm|greenhouse|harvest|farming|horticulture|tractor|picking|fruit|tuinbouw|glastuinbouw)\b/i },
-    { name: 'Servicii', regex: /\b(cleaner|cleaning|facility|mechanic|car mechanic|automotive|repair|schoonmaak|automonteur)\b/i },
-    { name: 'Comerț', regex: /\b(retail|sales|cashier|shop|store assistant|merchandiser|verkoop)\b/i }
-];
+export function mapIscoToDomain(iscoCode) {
+    if (!iscoCode) return null;
+    const code = String(iscoCode).replace(/^C/i, '').trim();
+    if (!code) return null;
 
-function inferDomain(title, description) {
-    const combined = `${title || ''} ${description || ''}`;
-    for (const rule of DOMAIN_RULES) {
-        if (rule.regex.test(combined)) {
-            return rule.name;
+    // ISCO 9: Elementary occupations
+    if (code.startsWith('91')) return 'Servicii'; // Cleaners and helpers
+    if (code.startsWith('92')) return 'Agricultură'; // Agricultural, forestry & fishery labourers
+    if (code.startsWith('931')) return 'Construcții'; // Mining and construction labourers
+    if (code.startsWith('932')) return 'Producție'; // Manufacturing labourers
+    if (code.startsWith('933')) return 'Producție'; // Freight handlers, order pickers, warehouse helpers -> ANOFM Producție / Logistică
+    if (code.startsWith('94')) return 'HoReCa'; // Food preparation assistants
+    if (code.startsWith('95')) return 'Comerț'; // Street sales
+    if (code.startsWith('96')) return 'Servicii'; // Refuse and other elementary workers
+
+    // ISCO 8: Plant and machine operators and assemblers
+    if (code.startsWith('831') || code.startsWith('832') || code.startsWith('833') || code.startsWith('835')) {
+        return 'Transporturi'; // Strictly drivers, truckers, delivery, couriers -> ANOFM Servicii transport / curierat
+    }
+    if (code.startsWith('834')) return 'Producție'; // Mobile plant operators (forklift / stivuitorist) -> ANOFM Producție / Logistică
+    if (code.startsWith('81') || code.startsWith('82')) return 'Producție'; // Stationary plant, assemblers, machine operators
+
+    // ISCO 7: Craft and related trades workers
+    if (code.startsWith('75')) return 'Producție'; // Food processing (butchers 7511, bakers 7512), garment, wood
+    if (code.startsWith('71')) return 'Construcții'; // Building trades
+    if (code.startsWith('741')) return 'Construcții'; // Electrical installers
+    if (code.startsWith('742')) return 'IT'; // Electronics & telecoms installers
+    if (code.startsWith('723')) return 'Servicii'; // Motor vehicle mechanics (service auto)
+    if (code.startsWith('721') || code.startsWith('722')) return 'Producție'; // Sheet metal, welders, blacksmiths
+    if (code.startsWith('73')) return 'Producție'; // Handicraft & printing
+
+    // ISCO 6: Skilled agricultural, forestry and fishery
+    if (code.startsWith('6')) return 'Agricultură';
+
+    // ISCO 5: Services and sales workers
+    if (code.startsWith('512') || code.startsWith('513')) return 'HoReCa'; // Cooks, waiters, bartenders
+    if (code.startsWith('514') || code.startsWith('516')) return 'Servicii'; // Hairdressers, beauticians, personal services
+    if (code.startsWith('515')) return 'HoReCa'; // Building & housekeeping supervisors
+    if (code.startsWith('52')) return 'Comerț'; // Salespersons, cashiers
+    if (code.startsWith('53')) return 'Domeniul Medical'; // Personal care workers in health services
+    if (code.startsWith('54')) return 'Pază și Protecție'; // Protective services, security guards
+
+    // ISCO 4: Clerical support workers
+    if (code.startsWith('432')) return 'Producție'; // Stock clerks, material recording (logistics/depozit)
+    if (code.startsWith('431')) return 'Financiar-Contabil'; // Accounting clerks, payroll
+    if (code.startsWith('4224')) return 'HoReCa'; // Hotel receptionists
+    if (code.startsWith('41') || code.startsWith('42') || code.startsWith('44')) return 'Administrativ'; // General office, customer service
+
+    // ISCO 3: Technicians and associate professionals
+    if (code.startsWith('35')) return 'IT'; // ICT technicians
+    if (code.startsWith('32')) return 'Domeniul Medical'; // Health associate professionals
+    if (code.startsWith('31')) return 'Inginerie'; // Science & engineering technicians
+    if (code.startsWith('331')) return 'Financiar-Contabil'; // Financial associates
+    if (code.startsWith('332')) return 'Comerț'; // Sales reps, procurement, buyers
+    if (code.startsWith('333') || code.startsWith('334') || code.startsWith('335') || code.startsWith('34')) return 'Administrativ';
+
+    // ISCO 2: Professionals
+    if (code.startsWith('25')) return 'IT'; // ICT professionals, developers
+    if (code.startsWith('22')) return 'Domeniul Medical'; // Doctors, health professionals
+    if (code.startsWith('21')) return 'Inginerie'; // Science & engineering professionals
+    if (code.startsWith('23')) return 'Educație'; // Teaching professionals
+    if (code.startsWith('241')) return 'Financiar-Contabil'; // Finance, accountants, auditors
+    if (code.startsWith('243')) return 'Marketing'; // Advertising, marketing, PR
+    if (code.startsWith('242') || code.startsWith('26')) return 'Administrativ';
+
+    // ISCO 1: Managers
+    if (code.startsWith('141')) return 'HoReCa'; // Hotel/restaurant managers
+    if (code.startsWith('142')) return 'Comerț'; // Retail managers
+    if (code.startsWith('13')) return 'Producție'; // Production managers
+    if (code.startsWith('1')) return 'Administrativ';
+
+    return null;
+}
+
+export function extractIscoFromCategories(categories) {
+    if (!Array.isArray(categories)) return null;
+    for (const cat of categories) {
+        if (typeof cat !== 'string') continue;
+        const iscoMatch = cat.match(/\/isco\/C?(\d{2,4})/i);
+        if (iscoMatch && iscoMatch[1]) {
+            return iscoMatch[1];
         }
     }
-    return 'Uniunea Europeană';
+    return null;
+}
+
+export function resolveDomainFromTitle(title) {
+    const t = (title || '').toLowerCase();
+
+    // 1. Cleaning / Servicii
+    if (/\b(cleaner|cleaning|schoonmaak|reinigungskraft|reinigung|nettoyage|housekeeping|janitor|car mechanic|automonteur|kfz-mechatroniker|service auto|facility|curatenie|curățenie|femeie de serviciu|spalator|pest control)\b/i.test(t)) {
+        return 'Servicii';
+    }
+
+    // 2. Transporturi (STRICT drivers / couriers / wheels - ANOFM Servicii transport / curierat)
+    if (/\b(truck driver|lorry driver|berufskraftfahrer|vrachtwagenchauffeur|chauffeur|driver|delivery driver|courier|curier|sofer|șofer|lkw-fahrer|kierowca|fahrpersonal|bus driver|van driver)\b/i.test(t)) {
+        return 'Transporturi';
+    }
+
+    // 3. Agricultură (greenhouse, fruit picking, farming, crops, apples, pears)
+    if (/\b(greenhouse|glasshouse|tuinbouw|glastuinbouw|harvest|fruit|fruits|apple|apples|pear|pears|strawberry|berries|crop|crops|horticulture|agronomist|landbouw|agrarisch|farming|dairy farm|livestock farm|poultry|agricultural)\b/i.test(t)) {
+        return 'Agricultură';
+    }
+
+    // 4. IT
+    if (/\b(software|developer|frontend|backend|devops|programmer|python|java|javascript|react|node|cloud|qa engineer|fullstack|cyber|sysadmin|informatiker|data engineer|machine learning|ai engineer|scrum master)\b/i.test(t)) {
+        return 'IT';
+    }
+
+    // 5. Domeniul Medical
+    if (/\b(nurse|caregiver|doctor|healthcare|medical|hospital|dental|clinic|verpleegkundige|zorg|pharmacy|pharmacist|therapist|physician|biologist|molekularbiologe|krankenpfleger|altenpfleger|medic|asistent medical)\b/i.test(t)) {
+        return 'Domeniul Medical';
+    }
+
+    // 6. Inginerie (Evaluated before generic production)
+    if (/\b(engineer|ingenieur|technician|mechanical|electrical|automation|field service|robotics|mechatronics|process engineer|project engineer|aerospace|r&d|cad designer|hardware engineer|elektrotechnik|luftfahrttechnik)\b/i.test(t)) {
+        return 'Inginerie';
+    }
+
+    // 7. Producție (Fabrică, Depozit / Logistică, Măcelar / Butcher - ANOFM Producție / Logistică)
+    if (/\b(warehouse|order picker|orderpicker|order-picker|order pick|picker|packing|packer|packaging|logistics|logistiek|magazijn|magazioner|depozit|gestionar|material handler|forklift|reach truck|heftruck|reachtruck|stivuitorist|stock clerk|supply chain|inventory|butcher|slager|fleischer|meat|deboner|abattoir|rzeźnik|production|assembly|manufacturing|factory|operator|cnc|assembler|montagemedewerker|productie|produktionshelfer|fabric|welder|lasser|sudor|frezor|strungar|abfüller|verpacker)\b/i.test(t)) {
+        return 'Producție';
+    }
+
+    // 8. Construcții
+    if (/\b(construction|carpenter|electrician|plumber|builder|mason|roofer|pipefitter|hvac|bouwvak|scaffolding|timmerman|metselaar|bricklayer|site manager|civil engineer|zidar|zugrav|instalator|elektriker|monteur|baustelle|bauleiter)\b/i.test(t)) {
+        return 'Construcții';
+    }
+
+    // 9. HoReCa
+    if (/\b(cook|chef|kitchen|hotel|restaurant|waiter|bartender|hospitality|dishwasher|afwasser|barista|gastronomy|servicekraft|kelner|ospatar|bucatar|front office|receptionist)\b/i.test(t)) {
+        return 'HoReCa';
+    }
+
+    // 10. Financiar-Contabil
+    if (/\b(accountant|finance|accounting|payroll|auditor|financial|controller|buchhalter|boekhouder|tax|ledger|treasury|contabil)\b/i.test(t)) {
+        return 'Financiar-Contabil';
+    }
+
+    // 11. Comerț
+    if (/\b(retail|sales|cashier|shop|store|verkoop|account manager|b2b|b2c|buyer|procurement|sales representative|vertrieb|merchandiser|casier|vanzator|vânzător)\b/i.test(t)) {
+        return 'Comerț';
+    }
+
+    // 12. Marketing
+    if (/\b(marketing|seo|content creator|digital marketing|copywriter|social media|brand manager|public relations|ecommerce manager)\b/i.test(t)) {
+        return 'Marketing';
+    }
+
+    // 13. Educație
+    if (/\b(teacher|trainer|educator|instructor|professor|docent|academic|researcher|phd|postdoc|lecturer|erzieher|dozent|profesor)\b/i.test(t)) {
+        return 'Educație';
+    }
+
+    // 14. Pază și Protecție
+    if (/\b(security guard|guard|surveillance|safety officer|beveiliger|patrol|cctv|bodyguard|paznic|agent securitate|sicherheitskraft)\b/i.test(t)) {
+        return 'Pază și Protecție';
+    }
+
+    // 15. Administrativ
+    if (/\b(administrative|secretary|office|assistant|customer service|customer support|call center|klantenservice|hr|human resources|recruiter|talent acquisition|clerk|operations manager|secretara|asistent manager)\b/i.test(t)) {
+        return 'Administrativ';
+    }
+
+    return 'Altele';
+}
+
+export function resolveEuDomain(jobCategoriesCodes, title) {
+    const isco = extractIscoFromCategories(jobCategoriesCodes);
+    if (isco) {
+        const iscoDomain = mapIscoToDomain(isco);
+        if (iscoDomain) return iscoDomain;
+    }
+    return resolveDomainFromTitle(title);
 }
 
 function cleanHtmlDescription(rawHtml) {
@@ -109,41 +257,83 @@ function extractEuroSalary(rawText) {
     // 1. HARD DISQUALIFIERS (Ignore travel allowances & non-salary numbers)
     text = text.replace(/(?:€|EUR)?\s*0[.,]\d{1,2}\s*(?:€|EUR|ct|cent)?\s*(?:per|\/)\s*(?:km|kilometer)/gi, '');
 
-    // 2. EXPLICIT LABELED SALARY FIELDS (Highest Precision First)
-    const labeledHourlyRegex = /(?:hourly\s+(?:wage|rate|salary)|uurloon|tarif\s+orar|bruto\s+uurloon|stundenlohn)\s*[:=-]?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m)?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
-    const labeledMonthlyRegex = /(?:monthly\s+(?:wage|salary)|maandsalaris|salariu\s+lunar|monatsgehalt|bruto\s+maandsalaris)\s*[:=-]?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
+    // 2. DISQUALIFY NON-SALARY CONTEXT (Budgets, revenues, turnover, investments, campaign funds)
+    // Strips out numbers inside sentences talking about corporate/ad budgets, company turnover, investments, grants
+    const nonSalarySentenceRegex = /([^.\n;?!]*\b(?:budget|buget|ad\s*spend|media\s*budget|marketing\s*budget|campaign\s*budget|operational\s*budget|turnover|cifr[aă]\s*de\s*afaceri|omzet|annual\s*revenue|company\s*revenue|sales\s*volume|investment|investi[tț]ii|portfolio|funding|grant|worth\s*of\s*equipment)\b[^.\n;?!]*)/gi;
+    text = text.replace(nonSalarySentenceRegex, '');
 
+    // Format Helpers
+    const formatHourly = (v1, v2, isNet) => {
+        const type = isNet ? 'net' : 'gross';
+        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 120) {
+            return { salaryMin: `€${v1.toFixed(2)} - €${v2.toFixed(2)} / oră`, salaryType: type, rawValue: v1 };
+        }
+        return { salaryMin: `€${v1.toFixed(2)} / oră`, salaryType: type, rawValue: v1 };
+    };
+
+    const formatWeekly = (v1, v2, isNet, isUpTo = false) => {
+        const type = isNet ? 'net' : 'gross';
+        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 2500) {
+            return { salaryMin: `€${v1} - €${v2} / săpt`, salaryType: type, rawValue: v1 };
+        }
+        if (isUpTo) {
+            return { salaryMin: `până la €${v1} / săpt`, salaryType: type, rawValue: v1 };
+        }
+        return { salaryMin: `€${v1} / săpt`, salaryType: type, rawValue: v1 };
+    };
+
+    const formatMonthly = (v1, v2, isNet, isUpTo = false) => {
+        const type = isNet ? 'net' : 'gross';
+        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 12000) {
+            return { salaryMin: `€${v1.toLocaleString('ro-RO')} - €${v2.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
+        }
+        if (isUpTo) {
+            return { salaryMin: `până la €${v1.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
+        }
+        return { salaryMin: `€${v1.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
+    };
+
+    // 3. EXPLICIT LABELED SALARY FIELDS (Highest Precision First)
+    const labeledHourlyRegex = /(?:hourly\s+(?:wage|rate|salary)|uurloon|tarif\s+orar|bruto\s+uurloon|netto\s+uurloon|stundenlohn)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
     const labH = text.match(labeledHourlyRegex);
     if (labH && labH[1]) {
         const v1 = parseFloat(labH[1].replace(',', '.'));
         if (!isNaN(v1) && v1 >= 11 && v1 <= 120) {
             const v2 = labH[2] ? parseFloat(labH[2].replace(',', '.')) : null;
             const isNet = /netto|\bnet\b/i.test(labH[0]);
-            const display = (v2 && !isNaN(v2) && v2 > v1 && v2 <= 120)
-                ? `€${v1.toFixed(2)} - €${v2.toFixed(2)} / oră`
-                : `€${v1.toFixed(2)} / oră`;
-            return { salaryMin: display, salaryType: isNet ? 'net' : 'gross', rawValue: v1 };
+            return formatHourly(v1, v2, isNet);
         }
     }
 
+    const labeledMonthlyRegex = /(?:monthly\s+(?:wage|salary)|maandsalaris|salariu\s+lunar|monatsgehalt|bruto\s+maandsalaris|netto\s+maandsalaris)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|bis)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
     const labM = text.match(labeledMonthlyRegex);
     if (labM && labM[1]) {
         const v1 = Math.round(parseFloat(labM[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '')));
-        if (!isNaN(v1) && v1 >= 1000 && v1 <= 20000) {
+        if (!isNaN(v1) && v1 >= 1000 && v1 <= 12000) {
             const v2 = labM[2] ? Math.round(parseFloat(labM[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, ''))) : null;
             const isNet = /netto|\bnet\b/i.test(labM[0]);
-            const display = (v2 && !isNaN(v2) && v2 > v1 && v2 <= 20000)
-                ? `€${v1.toLocaleString('ro-RO')} - €${v2.toLocaleString('ro-RO')} / lună`
-                : `€${v1.toLocaleString('ro-RO')} / lună`;
-            return { salaryMin: display, salaryType: isNet ? 'net' : 'gross', rawValue: v1 };
+            const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(labM[0]);
+            return formatMonthly(v1, v2, isNet, isUpTo);
         }
     }
 
-    // 3. HOURLY RATES WITH EXPLICIT CURRENCY & UNIT
+    const labeledWeeklyRegex = /(?:weekly\s+(?:wage|salary|rate)|weekloon|salariu\s+s[aă]pt[aă]m[aâ]nal|wochenlohn)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{3,4})\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{3,4})?\s*(?:€|EUR)?/i;
+    const labW = text.match(labeledWeeklyRegex);
+    if (labW && labW[1]) {
+        const v1 = Math.round(parseFloat(labW[1].replace(/\./g, '')));
+        if (!isNaN(v1) && v1 >= 350 && v1 <= 2500) {
+            const v2 = labW[2] ? Math.round(parseFloat(labW[2].replace(/\./g, ''))) : null;
+            const isNet = /netto|\bnet\b/i.test(labW[0]);
+            const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(labW[0]);
+            return formatWeekly(v1, v2, isNet, isUpTo);
+        }
+    }
+
+    // 4. HOURLY RATES WITH EXPLICIT CURRENCY & UNIT
     const strictHourlyRegexes = [
-        /(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m)\s*(?:€|EUR)?\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|oră)|\/\s*(?:h|uur|hour|stunde)|p\/h|p\/u)\b/i,
-        /(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|oră)|\/\s*(?:h|uur|hour|stunde)|p\/h|p\/u)\b/i,
-        /(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m)?\s*(\d{1,2}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|oră)|\/\s*(?:h|uur|hour|stunde)|p\/h|p\/u)\b/i
+        /(?:earn(?:ing)?|salary|wage|pay|uurloon|gehalt|lohn)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf|from)?\s*(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)\s*(?:€|EUR)?\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i,
+        /(?:earn(?:ing)?|salary|wage|pay|uurloon|gehalt|lohn)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf|from)?\s*(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i,
+        /(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)?\s*(\d{1,2}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i
     ];
 
     for (const rx of strictHourlyRegexes) {
@@ -153,19 +343,35 @@ function extractEuroSalary(rawText) {
             if (!isNaN(v1) && v1 >= 11 && v1 <= 95) {
                 const v2 = m[2] ? parseFloat(m[2].replace(',', '.')) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                const display = (v2 && !isNaN(v2) && v2 > v1 && v2 <= 95)
-                    ? `€${v1.toFixed(2)} - €${v2.toFixed(2)} / oră`
-                    : `€${v1.toFixed(2)} / oră`;
-                return { salaryMin: display, salaryType: isNet ? 'net' : 'gross', rawValue: v1 };
+                return formatHourly(v1, v2, isNet);
             }
         }
     }
 
-    // 4. MONTHLY RATES WITH EXPLICIT CURRENCY & UNIT
+    // 5. WEEKLY RATES (Dutch staffing agency packages)
+    const strictWeeklyRegexes = [
+        /(?:earn(?:ing)?|salary|wage|pay|weekloon|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{3,4})\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{3,4})?\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:week|woche|s[aă]pt[aă]m[aâ]n[aă])|\/\s*(?:week|woche|s[aă]pt)|\b(?:p\/w|pw)\b)/i,
+        /(\d{3,4})\s*(?:-|–|tot|to)?\s*(\d{3,4})?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:week|woche|s[aă]pt[aă]m[aâ]n[aă])|\/\s*(?:week|woche|s[aă]pt)|\b(?:p\/w|pw)\b)/i
+    ];
+
+    for (const rx of strictWeeklyRegexes) {
+        const m = text.match(rx);
+        if (m && m[1]) {
+            const v1 = Math.round(parseFloat(m[1].replace(/\./g, '')));
+            if (!isNaN(v1) && v1 >= 350 && v1 <= 2500) {
+                const v2 = m[2] ? Math.round(parseFloat(m[2].replace(/\./g, ''))) : null;
+                const isNet = /netto|\bnet\b/i.test(m[0]);
+                const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(m[0]);
+                return formatWeekly(v1, v2, isNet, isUpTo);
+            }
+        }
+    }
+
+    // 6. MONTHLY RATES WITH EXPLICIT CURRENCY & TIME UNIT
     const strictMonthlyRegexes = [
-        /(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:month|maand|monat|lună)|\/\s*(?:m|maand|month|monat)|pm)\b/i,
-        /(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:month|maand|monat|lună)|\/\s*(?:m|maand|month|monat)|pm)\b/i,
-        /(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)?\s*(\d{1,2}[.,]?\d{3})?\s*(?:€|EUR)\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:month|maand|monat|lună)|\/\s*(?:m|maand|month|monat)|pm)\b/i,
+        /(?:earn(?:ing)?|salary|wage|pay|gehalt|lohn|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to|bis)\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
+        /(?:earn(?:ing)?|salary|wage|pay|gehalt|lohn|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
+        /(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)?\s*(\d{1,2}[.,]?\d{3})?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
         /(?:salary|salaris|lohn|gehalt)\s*[:=-]\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3})?\b/i
     ];
 
@@ -174,35 +380,12 @@ function extractEuroSalary(rawText) {
         if (m && m[1]) {
             const numStr1 = m[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '');
             const v1 = Math.round(parseFloat(numStr1));
-            if (!isNaN(v1) && v1 >= 1000 && v1 <= 20000) {
+            if (!isNaN(v1) && v1 >= 1000 && v1 <= 12000) {
                 const numStr2 = m[2] ? m[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, '') : null;
                 const v2 = numStr2 ? Math.round(parseFloat(numStr2)) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                const display = (v2 && !isNaN(v2) && v2 > v1 && v2 <= 20000)
-                    ? `€${v1.toLocaleString('ro-RO')} - €${v2.toLocaleString('ro-RO')} / lună`
-                    : `€${v1.toLocaleString('ro-RO')} / lună`;
-                return { salaryMin: display, salaryType: isNet ? 'net' : 'gross', rawValue: v1 };
-            }
-        }
-    }
-
-    // 5. WEEKLY RATES (Dutch staffing agency packages)
-    const strictWeeklyRegexes = [
-        /(?:€|EUR)\s*(\d{3,4})\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*(\d{3,4})?\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:week|woche|săptămână)|\/\s*(?:week|woche)|p\/w)\b/i
-    ];
-
-    for (const rx of strictWeeklyRegexes) {
-        const m = text.match(rx);
-        if (m && m[1]) {
-            const v1 = Math.round(parseFloat(m[1].replace(/\./g, '')));
-            if (!isNaN(v1) && v1 >= 350 && v1 <= 2000) {
-                const v2 = m[2] ? Math.round(parseFloat(m[2].replace(/\./g, ''))) : null;
-                const isNet = /netto|\bnet\b/i.test(m[0]);
-                const approxMonthly = Math.round(v1 * 4.33);
-                const display = (v2 && !isNaN(v2) && v2 > v1 && v2 <= 2000)
-                    ? `€${v1} - €${v2} / săpt (~€${approxMonthly}/lună)`
-                    : `€${v1} / săpt (~€${approxMonthly}/lună)`;
-                return { salaryMin: display, salaryType: isNet ? 'net' : 'gross', rawValue: approxMonthly };
+                const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(m[0]);
+                return formatMonthly(v1, v2, isNet, isUpTo);
             }
         }
     }
@@ -541,7 +724,8 @@ async function fetchJobsForCountry(countryObj) {
             const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
             const locationStr = extractLocationDetails(job, countryObj);
             const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
-            const inferredDomain = inferDomain(cleanTitle, cleanDesc);
+            const iscoCode = extractIscoFromCategories(job.jobCategoriesCodes);
+            const resolvedDomain = resolveEuDomain(job.jobCategoriesCodes, cleanTitle);
             const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
 
             const directEuresUrl = `https://europa.eu/eures/portal/jv-se/jv-details/${encodeURIComponent(job.id)}?lang=en`;
@@ -549,9 +733,12 @@ async function fetchJobsForCountry(countryObj) {
             allCountryJobs.push({
                 id: uniqueId,
                 rawEuresId: job.id,
+                created_at: job.creationDate ? new Date(job.creationDate).toISOString() : new Date().toISOString(),
                 occupation: cleanTitle,
                 employer_name: employerName,
-                job_domain_name: inferredDomain,
+                job_domain_name: resolvedDomain,
+                jobCategoriesCodes: job.jobCategoriesCodes || [],
+                isco: iscoCode,
                 address_locality_name: locationStr,
                 description: cleanDesc,
                 minimum_salary: salaryMin,
@@ -940,7 +1127,8 @@ async function runSync() {
         const key = j.id || `eures-${j.rawEuresId}`;
         if (!newJobMap.has(key)) {
             filledCount++;
-            const daysActive = j.job_expiry_date ? Math.max(1, Math.min(30, Math.floor((now - new Date(j.job_expiry_date)) / 86400000) + 30)) : 14;
+            const jobFirstSeen = j.created_at ? new Date(j.created_at) : (j.job_expiry_date ? new Date(new Date(j.job_expiry_date).getTime() - (30 * 86400000)) : now);
+            const daysActive = Math.max(1, Math.floor((now - jobFirstSeen) / 86400000));
 
             newEvents.push({
                 id: j.id,
