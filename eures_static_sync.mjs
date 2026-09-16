@@ -413,14 +413,7 @@ function detectAccommodationOffer(description, title = '') {
         return { hasAccommodation: false, type: null };
     }
 
-    // Edge Case C: Vague relocation / moving bonuses without direct housing
-    if (/(?:relocation|moving)\s+(?:assistance|support|allowance|bonus|package)\s+(?:\([^)]*\)\s+)?(?:under\s+certain\s+conditions|terms\s+and\s+conditions|subject\s+to)/i.test(text) ||
-        /\bexpatriation\s+allowance\b/i.test(text) ||
-        /\bmoving\s+(?:expenses|costs|allowance)\b/i.test(text)) {
-        return { hasAccommodation: false, type: null };
-    }
-
-    // Edge Case D: Explicit Negations or 'Own Accommodation' requirements
+    // Edge Case C: Explicit Negations or 'Own Accommodation' requirements
     const strictDisqualifiers = [
         /(?:no|not|cannot|can't|neither|nor|without|don't|do not|never)\s+(?:help\s+(?:with|you\s+with)\s+)?(?:provide|providing|offer|have|arrange|sponsor|give|include)\s+(?:any\s+)?(?:free\s+|company\s+|temporary\s+|suitable\s+|staff\s+)?(?:accommodation|housing|living space|room|lodging|flat|apartment)/i,
         /no\s+(?:accommodation|housing|living space|lodging)\s+(?:is\s+)?(?:available|provided|offered|included|possible)/i,
@@ -429,39 +422,39 @@ function detectAccommodationOffer(description, title = '') {
         /(?:own|eigen|eigene)\s+(?:accommodation|housing|woonruimte|huisvesting|unterkunft|living space)/i,
         /(?:have|must have|need|required to have)\s+(?:your\s+|their\s+)?own\s+(?:accommodation|housing|place)/i,
         /(?:arrange|find|responsible for)\s+(?:your|their)\s+own\s+(?:accommodation|housing)/i,
-        /must reside in|must already live in|currently living in (?:the )?(?:netherlands|germany|belgium|austria|denmark|france)/i
+        /must reside in|must already live in|currently living in (?:the )?(?:netherlands|germany|belgium|austria|denmark)/i
     ];
 
     for (const rx of strictDisqualifiers) {
         if (rx.test(text)) return { hasAccommodation: false, type: null };
     }
 
-    // 2. STRICT PHYSICAL HOUSING ONLY (Direct Room, Bed, Flat, Bungalow or SNF norm)
-    const strictHousingPatterns = [
-        // English
-        /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|organized|covered|available|offered)\b/i,
-        /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges|organize|organizes)\s+(?:free\s+|furnished\s+|single[- ]room\s+|shared\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
+    // 2. TIER 1: DIRECT PHYSICAL HOUSING (Ready-to-move-in Agency/Employer Room, Bed or Bungalow)
+    const tier1HousingPatterns = [
+        /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|covered|available|offered)\b/i,
+        /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges)\s+(?:free\s+|furnished\s+|single[- ]room\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
         /\b(?:free|furnished|single[- ]room|private[- ]room|staff|company|snf[- ]certified)\s+(?:accommodation|housing|apartment|living space)\b/i,
-        /\b(?:snf|snf-norm|norma snf|snf-gecertificeerd)\b/i,
-        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i,
-        /\b(?:room\s+and\s+board|board\s+and\s+lodging)\b/i,
-        /\blive[- ]in\s+(?:position|job|carer|caregiver|nurse|role|housekeeper)\b/i,
-        // Dutch
-        /\b(?:huisvesting|woonruimte|onderdak)\s+(?:beschikbaar|geregeld|inbegrepen|voorzien|verzorgd)\b/i,
-        /\b(?:wij regelen|bieden)\s+(?:huisvesting|woonruimte)\b/i,
-        // German
-        /\b(?:unterkunft)\s+(?:gestellt|inklusive|bereitgestellt|vorhanden|wird gestellt)\b/i,
-        /\b(?:unterkunft|wohnung)\s+(?:wird|kann)\s+(?:bereitgestellt|gestellt)\b/i,
-        // Romanian
-        /\b(?:cazare|cazarea)\s+(?:asigurată|asigurata|gratuită|gratuita|inclusă|inclusa|oferită|oferita)\b/i,
-        /\b(?:oferim|asigurăm|asiguram)\s+cazare\b/i,
-        // French
-        /\b(?:logement|hébergement|hebergement)\s+(?:fourni|assuré|assure|inclus|pris en charge|mis à disposition)\b/i,
-        /\b(?:logé|loge)\s+et\s+nourri\b/i
+        /\b(?:snf|snf-norm|norma snf)\b/i,
+        /\b(?:huisvesting|woonruimte|onderdak)\s+(?:beschikbaar|geregeld|inbegrepen|voorzien)\b/i,
+        /\b(?:unterkunft)\s+(?:gestellt|inklusive|bereitgestellt)\b/i,
+        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i
     ];
 
-    for (const rx of strictHousingPatterns) {
+    for (const rx of tier1HousingPatterns) {
         if (rx.test(text)) return { hasAccommodation: true, type: 'housing' };
+    }
+
+    // 3. TIER 2: RELOCATION SUPPORT & HOUSING ALLOWANCES (Financial / Concierge Relocation Package)
+    const tier2RelocationPatterns = [
+        /\brelocation\s+(?:package|support|assistance|allowance|bonus|budget|service)\b/i,
+        /\bhousing\s+(?:support|allowance|assistance|subsidy)\b/i,
+        /\b(?:help|assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live|a flat|an apartment|wohnungssuche)\b/i,
+        /\btemporary\s+(?:housing|accommodation|apartment|living)\b/i,
+        /\bhelp\s+with\s+relocation\s+(?:including|and)\s+(?:accommodation|housing)\b/i
+    ];
+
+    for (const rx of tier2RelocationPatterns) {
+        if (rx.test(text)) return { hasAccommodation: true, type: 'relocation' };
     }
 
     return { hasAccommodation: false, type: null };
