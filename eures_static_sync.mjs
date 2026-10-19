@@ -655,12 +655,128 @@ function identifyEuAgency(rawEmp, title = '', desc = '') {
     return 'Angajator Direct UE';
 }
 
+function getJobSignature(title, employer) {
+    const clean = str => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `${clean(title)}::${clean(employer)}`;
+}
+
+async function fetchWidkJobs() {
+    console.log(`\n🇩🇰 [WIDK] Inițiere descărcare directă din Workindenmark API...`);
+    const widkJobs = [];
+    const seenWidkIds = new Set();
+    const WIDK_URL = 'https://workindenmark.jobnet.dk/bff/FindJob/Search';
+    const PAGE_SIZE = 100;
+    let page = 1;
+
+    while (true) {
+        const params = new URLSearchParams({
+            resultsPerPage: String(PAGE_SIZE),
+            pageNumber: String(page),
+            orderType: 'PublicationDate',
+            kmRadius: '50'
+        });
+
+        try {
+            const res = await fetch(`${WIDK_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json',
+                    'x-csrf': '1',
+                    'Referer': 'https://workindenmark.jobnet.dk/find-job'
+                }
+            });
+
+            if (!res.ok) {
+                console.warn(`  ⚠️ WIDK Page ${page} response: ${res.status}`);
+                break;
+            }
+
+            const data = await res.json();
+            const rawAds = data.jobAds || [];
+            if (rawAds.length === 0) break;
+
+            for (const raw of rawAds) {
+                if (!raw || !raw.jobAdId) continue;
+                if (seenWidkIds.has(raw.jobAdId)) continue;
+                seenWidkIds.add(raw.jobAdId);
+
+                const cleanTitle = (raw.title || raw.occupation || '').trim();
+                const cleanDesc = cleanHtmlDescription(raw.description || '');
+                if (!cleanTitle || cleanTitle.length < 4) continue;
+
+                const rawEmployerName = raw.hiringOrgName ? raw.hiringOrgName.trim() : '';
+                const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
+                const resolvedDomain = resolveEuDomain([], cleanTitle);
+                const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
+                const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
+
+                const locParts = [];
+                if (raw.postalDistrictName) locParts.push(raw.postalDistrictName);
+                if (raw.region) locParts.push(raw.region);
+                const locationStr = locParts.length > 0 ? `Danemarca (${locParts.join(', ')})` : 'Danemarca';
+
+                const officialUrl = raw.isExternal && raw.jobAdUrl 
+                    ? raw.jobAdUrl 
+                    : `https://workindenmark.jobnet.dk/find-job/${raw.jobAdId}`;
+
+                widkJobs.push({
+                    id: `widk-${raw.jobAdId}`,
+                    rawId: raw.jobAdId,
+                    created_at: raw.publicationDate ? new Date(raw.publicationDate).toISOString() : new Date().toISOString(),
+                    occupation: cleanTitle,
+                    employer_name: employerName,
+                    job_domain_name: resolvedDomain,
+                    jobCategoriesCodes: [],
+                    isco: null,
+                    address_locality_name: locationStr,
+                    description: cleanDesc,
+                    minimum_salary: salaryMin,
+                    salary_type: salaryType,
+                    has_accommodation: accInfo.hasAccommodation,
+                    accommodation_type: accInfo.type,
+                    job_expiry_date: raw.applicationDeadline ? new Date(raw.applicationDeadline).toISOString().split('T')[0] : null,
+                    open_positions: 1,
+                    source_aggregator: 'Workindenmark',
+                    is_premium: false,
+                    official_url: officialUrl,
+                    work_type_name: raw.workHourPartTime ? 'Part-Time' : 'Full-Time',
+                    work_type_details: raw.workHourPartTime ? 'Normă parțială (Part-Time)' : 'Normă întreagă (Full-Time)',
+                    professional_experience_name: cleanDesc.toLowerCase().includes('junior') || cleanDesc.toLowerCase().includes('starter') ? 'Fără experiență / Începător' : (cleanDesc.toLowerCase().includes('senior') || cleanDesc.toLowerCase().includes('experienced') ? 'Peste 3 ani experiență' : '1 - 3 ani experiență')
+                });
+            }
+
+            if (widkJobs.length >= data.totalJobAdCount || rawAds.length < PAGE_SIZE) break;
+
+            page++;
+            await new Promise(r => setTimeout(r, 500));
+        } catch (err) {
+            console.error(`  ❌ WIDK Page ${page} error:`, err.message);
+            break;
+        }
+    }
+
+    console.log(`  ✓ [WIDK] Total descărcat și mapat din Danemarca: ${widkJobs.length} joburi.`);
+    return widkJobs;
+}
+
 async function fetchJobsForCountry(countryObj) {
     console.log(`\n⏳ Fetching 100% of English jobs for ${countryObj.name} (${countryObj.key})...`);
     const allCountryJobs = [];
     const seenJobIds = new Set();
+    const seenSignatures = new Set();
     const PAGE_SIZE = 50;
     const CONCURRENCY = 4; // Fetch 4 pages concurrently
+
+    // Smart Merge for Denmark: Load 100% of Workindenmark first as the primary official dataset
+    if (countryObj.key === 'DK') {
+        const widkJobs = await fetchWidkJobs();
+        widkJobs.forEach(job => {
+            allCountryJobs.push(job);
+            seenJobIds.add(job.id);
+            seenSignatures.add(getJobSignature(job.occupation, job.employer_name));
+        });
+        console.log(`  🔗 [Smart Merge] Încărcat ${widkJobs.length} joburi din Workindenmark ca bază primară.`);
+    }
 
     // Helper: Fetch a single page from EURES for a set of location codes
     async function fetchSinglePage(page, locationCodes) {
@@ -712,7 +828,6 @@ async function fetchJobsForCountry(countryObj) {
             if (!job || !job.id) return;
             const uniqueId = `eures-${job.id}`;
             if (seenJobIds.has(uniqueId)) return;
-            seenJobIds.add(uniqueId);
 
             const cleanTitle = (job.title || '').trim();
             if (!cleanTitle || cleanTitle.length < 4) return;
@@ -722,6 +837,17 @@ async function fetchJobsForCountry(countryObj) {
 
             const rawEmployerName = job.employer?.name ? job.employer.name.trim() : '';
             const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
+
+            // Smart Merge deduplication for Denmark: skip if title + employer already imported from WIDK
+            if (countryObj.key === 'DK') {
+                const sig = getJobSignature(cleanTitle, employerName);
+                if (seenSignatures.has(sig)) {
+                    return; // Skip duplicate, prioritize richer WIDK entry
+                }
+                seenSignatures.add(sig);
+            }
+
+            seenJobIds.add(uniqueId);
             const locationStr = extractLocationDetails(job, countryObj);
             const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
             const iscoCode = extractIscoFromCategories(job.jobCategoriesCodes);
