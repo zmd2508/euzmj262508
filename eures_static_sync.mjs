@@ -929,6 +929,30 @@ async function fetchJobsForCountry(countryObj) {
         }
     }
 
+    // 🛡️ CIRCUIT BREAKER / SAFETY SHIELD (Downtime & Maintenance Protection)
+    // If upstream EURES is down, in maintenance, or returning 403/errors, NEVER wipe healthy cached data!
+    const primaryDir = DATA_DIRS[0];
+    const countryFilePath = primaryDir ? path.join(primaryDir, `jobs_${countryObj.code}.json`) : null;
+    let cachedCountryJobs = [];
+
+    if (countryFilePath && fs.existsSync(countryFilePath)) {
+        try {
+            const raw = JSON.parse(fs.readFileSync(countryFilePath, 'utf8'));
+            const prevList = Array.isArray(raw.jobs) ? raw.jobs : (Array.isArray(raw) ? raw : []);
+            if (prevList.length > 0) {
+                cachedCountryJobs = prevList;
+            }
+        } catch (_) {}
+    }
+
+    if (cachedCountryJobs.length > 20 && allCountryJobs.length < (cachedCountryJobs.length * 0.1)) {
+        console.warn(`\n  🛡️ [CIRCUIT BREAKER TRIGGERED for ${countryObj.name} (${countryObj.key})]`);
+        console.warn(`  ⚠️ Upstream EURES API returned only ${allCountryJobs.length} jobs (expected ~${cachedCountryJobs.length}). Upstream server is down or in maintenance!`);
+        console.warn(`  🔒 PRESERVING ${cachedCountryJobs.length} verified jobs from healthy snapshot!`);
+        allCountryJobs.length = 0;
+        allCountryJobs.push(...cachedCountryJobs);
+    }
+
     const outputPayload = {
         country: countryObj.name,
         countryCode: countryObj.key,
