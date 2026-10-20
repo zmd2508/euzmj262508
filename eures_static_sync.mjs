@@ -1382,7 +1382,11 @@ async function runSync() {
     // 5. Automatic jsDelivr Edge CDN Cache Purge (Ensures 0 delay for all global users)
     try {
         console.log('\n⚡ Purging jsDelivr Edge CDN cache for instant global update...');
-        const cdnFiles = ['jobs_all.json', 'jobs_de.json', 'jobs_nl.json', 'jobs_be.json', 'jobs_at.json', 'jobs_dk.json', 'jobs_fr.json'];
+        const cdnFiles = [
+            'jobs_all.json', 'jobs_de.json', 'jobs_nl.json', 'jobs_be.json', 'jobs_at.json', 'jobs_dk.json', 'jobs_fr.json',
+            'meta_all.json', 'meta_de.json', 'meta_nl.json', 'meta_be.json', 'meta_at.json', 'meta_dk.json', 'meta_fr.json',
+            'pages/all/1.json', 'pages/de/1.json', 'pages/nl/1.json', 'pages/be/1.json', 'pages/at/1.json', 'pages/dk/1.json', 'pages/fr/1.json'
+        ];
         await Promise.all(cdnFiles.map(f => fetch(`https://purge.jsdelivr.net/gh/zmd2508/euzmj262508@main/data/${f}`).catch(() => {})));
         console.log('✅ jsDelivr Edge CDN cache purged successfully.');
     } catch (_) {}
