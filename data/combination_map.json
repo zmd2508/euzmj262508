@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-27T07:45:58.983Z",
-  "totalActiveJobsScanned": 8374,
-  "totalJobsMapped": 5415,
+  "updatedAt": "2026-10-27T19:28:49.569Z",
+  "totalActiveJobsScanned": 8479,
+  "totalJobsMapped": 5481,
   "byTrade": {
     "sofer": [
       "alba",
@@ -142,7 +142,6 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
-      "braila",
       "brasov",
       "bucuresti",
       "buzau",
@@ -391,6 +390,7 @@
       "brasov",
       "bucuresti",
       "buzau",
+      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -454,6 +454,7 @@
       "satu-mare",
       "sibiu",
       "suceava",
+      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -639,7 +640,6 @@
       "hunedoara",
       "iasi",
       "maramures",
-      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -733,6 +733,7 @@
       "ialomita",
       "iasi",
       "ilfov",
+      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -934,7 +935,6 @@
     ],
     "braila": [
       "asistent-medical",
-      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1040,7 +1040,8 @@
       "mecanic",
       "stivuitorist",
       "tamplar",
-      "vanzator"
+      "vanzator",
+      "zidar"
     ],
     "cluj": [
       "asistent-medical",
@@ -1320,13 +1321,13 @@
     ],
     "mehedinti": [
       "bucatar",
+      "contabil",
       "croitor",
       "curatenie",
       "electrician",
       "lacatus",
       "manipulant",
       "mecanic",
-      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1507,6 +1508,7 @@
       "mecanic",
       "paznic",
       "sofer",
+      "stivuitorist",
       "sudor",
       "tamplar",
       "vanzator",
