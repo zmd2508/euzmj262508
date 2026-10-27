@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-26T19:58:42.749Z",
-  "totalActiveJobsScanned": 8390,
-  "totalJobsMapped": 5426,
+  "updatedAt": "2026-10-27T07:45:58.983Z",
+  "totalActiveJobsScanned": 8374,
+  "totalJobsMapped": 5415,
   "byTrade": {
     "sofer": [
       "alba",
@@ -312,7 +312,6 @@
       "bacau",
       "bihor",
       "bistrita-nasaud",
-      "botosani",
       "braila",
       "brasov",
       "bucuresti",
@@ -490,7 +489,6 @@
       "olt",
       "prahova",
       "salaj",
-      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -927,7 +925,6 @@
       "manipulant",
       "mecanic",
       "ospatar",
-      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
@@ -1436,7 +1433,6 @@
       "sofer",
       "stivuitorist",
       "sudor",
-      "tamplar",
       "vanzator",
       "zidar"
     ],
