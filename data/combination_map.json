@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-27T19:28:49.569Z",
-  "totalActiveJobsScanned": 8479,
-  "totalJobsMapped": 5481,
+  "updatedAt": "2026-10-28T08:19:10.506Z",
+  "totalActiveJobsScanned": 8596,
+  "totalJobsMapped": 5571,
   "byTrade": {
     "sofer": [
       "alba",
@@ -184,7 +184,6 @@
       "braila",
       "brasov",
       "bucuresti",
-      "buzau",
       "calarasi",
       "caras-severin",
       "cluj",
@@ -301,8 +300,7 @@
       "timis",
       "tulcea",
       "valcea",
-      "vaslui",
-      "vrancea"
+      "vaslui"
     ],
     "paznic": [
       "alba",
@@ -354,6 +352,7 @@
       "brasov",
       "bucuresti",
       "buzau",
+      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -418,8 +417,7 @@
       "timis",
       "tulcea",
       "valcea",
-      "vaslui",
-      "vrancea"
+      "vaslui"
     ],
     "stivuitorist": [
       "alba",
@@ -681,7 +679,6 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
-      "braila",
       "brasov",
       "bucuresti",
       "caras-severin",
@@ -757,11 +754,13 @@
       "braila",
       "brasov",
       "bucuresti",
+      "buzau",
       "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
       "covasna",
+      "dambovita",
       "dolj",
       "galati",
       "giurgiu",
@@ -777,6 +776,7 @@
       "olt",
       "prahova",
       "salaj",
+      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -934,7 +934,6 @@
       "zidar"
     ],
     "braila": [
-      "asistent-medical",
       "contabil",
       "croitor",
       "curatenie",
@@ -999,8 +998,8 @@
       "croitor",
       "curatenie",
       "electrician",
+      "inginer",
       "lacatus",
-      "manipulant",
       "mecanic",
       "operator-cnc",
       "ospatar",
@@ -1039,6 +1038,7 @@
       "manipulant",
       "mecanic",
       "stivuitorist",
+      "sudor",
       "tamplar",
       "vanzator",
       "zidar"
@@ -1111,6 +1111,7 @@
       "curatenie",
       "curier",
       "electrician",
+      "inginer",
       "lacatus",
       "manipulant",
       "mecanic",
@@ -1425,6 +1426,7 @@
       "asistent-medical",
       "croitor",
       "curatenie",
+      "inginer",
       "lacatus",
       "manipulant",
       "mecanic",
@@ -1600,7 +1602,6 @@
       "asistent-medical",
       "bucatar",
       "contabil",
-      "curatenie",
       "curier",
       "electrician",
       "inginer",
@@ -1612,8 +1613,7 @@
       "sofer",
       "stivuitorist",
       "sudor",
-      "vanzator",
-      "zidar"
+      "vanzator"
     ]
   }
 }
