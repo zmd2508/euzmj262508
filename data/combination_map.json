@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-29T08:26:44.819Z",
-  "totalActiveJobsScanned": 8679,
-  "totalJobsMapped": 5616,
+  "updatedAt": "2026-10-29T19:36:20.349Z",
+  "totalActiveJobsScanned": 8809,
+  "totalJobsMapped": 5707,
   "byTrade": {
     "sofer": [
       "alba",
@@ -330,6 +330,7 @@
       "neamt",
       "olt",
       "prahova",
+      "salaj",
       "satu-mare",
       "sibiu",
       "suceava",
@@ -487,6 +488,7 @@
       "olt",
       "prahova",
       "salaj",
+      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -636,6 +638,7 @@
       "hunedoara",
       "iasi",
       "maramures",
+      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -681,6 +684,7 @@
       "caras-severin",
       "cluj",
       "constanta",
+      "covasna",
       "dambovita",
       "dolj",
       "galati",
@@ -696,6 +700,7 @@
       "satu-mare",
       "sibiu",
       "suceava",
+      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -1085,6 +1090,7 @@
       "zidar"
     ],
     "covasna": [
+      "asistent-medical",
       "contabil",
       "curatenie",
       "electrician",
@@ -1327,6 +1333,7 @@
       "lacatus",
       "manipulant",
       "mecanic",
+      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1434,6 +1441,7 @@
       "sofer",
       "stivuitorist",
       "sudor",
+      "tamplar",
       "vanzator",
       "zidar"
     ],
@@ -1447,6 +1455,7 @@
       "manipulant",
       "mecanic",
       "operator-cnc",
+      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
@@ -1497,6 +1506,7 @@
       "zidar"
     ],
     "teleorman": [
+      "asistent-medical",
       "bucatar",
       "croitor",
       "curatenie",
