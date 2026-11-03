@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-02T22:46:08.826Z",
-  "totalActiveJobsScanned": 7270,
-  "totalJobsMapped": 4661,
+  "updatedAt": "2026-11-03T09:28:34.416Z",
+  "totalActiveJobsScanned": 7140,
+  "totalJobsMapped": 4604,
   "byTrade": {
     "sofer": [
       "alba",
@@ -327,7 +327,6 @@
       "prahova",
       "satu-mare",
       "sibiu",
-      "suceava",
       "timis",
       "valcea",
       "vaslui",
@@ -437,7 +436,6 @@
       "prahova",
       "salaj",
       "sibiu",
-      "suceava",
       "teleorman",
       "timis",
       "tulcea",
@@ -643,7 +641,6 @@
       "iasi",
       "ilfov",
       "mures",
-      "neamt",
       "prahova",
       "sibiu",
       "teleorman",
@@ -1329,7 +1326,6 @@
       "contabil",
       "croitor",
       "curatenie",
-      "curier",
       "electrician",
       "inginer",
       "lacatus",
@@ -1452,9 +1448,7 @@
       "manipulant",
       "mecanic",
       "ospatar",
-      "paznic",
       "sofer",
-      "stivuitorist",
       "tamplar",
       "vanzator",
       "zidar"
