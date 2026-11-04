@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-04T09:06:01.941Z",
-  "totalActiveJobsScanned": 7287,
-  "totalJobsMapped": 4708,
+  "updatedAt": "2026-11-04T20:50:39.421Z",
+  "totalActiveJobsScanned": 7499,
+  "totalJobsMapped": 4857,
   "byTrade": {
     "sofer": [
       "alba",
@@ -73,6 +73,7 @@
       "iasi",
       "ilfov",
       "maramures",
+      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -140,6 +141,7 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
+      "braila",
       "brasov",
       "bucuresti",
       "buzau",
@@ -163,6 +165,7 @@
       "olt",
       "prahova",
       "salaj",
+      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -539,6 +542,7 @@
       "iasi",
       "ilfov",
       "maramures",
+      "mures",
       "neamt",
       "prahova",
       "salaj",
@@ -653,6 +657,7 @@
       "vrancea"
     ],
     "asistent-medical": [
+      "alba",
       "arges",
       "bacau",
       "bihor",
@@ -678,7 +683,6 @@
       "satu-mare",
       "sibiu",
       "suceava",
-      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -710,6 +714,7 @@
       "ialomita",
       "iasi",
       "ilfov",
+      "maramures",
       "mehedinti",
       "mures",
       "neamt",
@@ -768,6 +773,7 @@
   },
   "byCounty": {
     "alba": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -909,6 +915,7 @@
       "zidar"
     ],
     "braila": [
+      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1275,6 +1282,7 @@
     "maramures": [
       "asistent-medical",
       "bucatar",
+      "contabil",
       "croitor",
       "curatenie",
       "electrician",
@@ -1298,6 +1306,7 @@
       "curatenie",
       "electrician",
       "manipulant",
+      "mecanic",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1314,6 +1323,7 @@
       "curier",
       "electrician",
       "inginer",
+      "lacatus",
       "manipulant",
       "mecanic",
       "operator-cnc",
@@ -1387,6 +1397,7 @@
     ],
     "satu-mare": [
       "asistent-medical",
+      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1460,7 +1471,6 @@
       "zidar"
     ],
     "teleorman": [
-      "asistent-medical",
       "bucatar",
       "croitor",
       "curatenie",
