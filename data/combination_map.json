@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-04T20:50:39.421Z",
-  "totalActiveJobsScanned": 7499,
-  "totalJobsMapped": 4857,
+  "updatedAt": "2026-11-05T09:26:04.654Z",
+  "totalActiveJobsScanned": 7442,
+  "totalJobsMapped": 4825,
   "byTrade": {
     "sofer": [
       "alba",
@@ -141,8 +141,6 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
-      "braila",
-      "brasov",
       "bucuresti",
       "buzau",
       "caras-severin",
@@ -165,7 +163,6 @@
       "olt",
       "prahova",
       "salaj",
-      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -365,7 +362,6 @@
       "salaj",
       "satu-mare",
       "sibiu",
-      "teleorman",
       "timis",
       "tulcea",
       "valcea"
@@ -440,7 +436,6 @@
       "prahova",
       "salaj",
       "sibiu",
-      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -915,7 +910,6 @@
       "zidar"
     ],
     "braila": [
-      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -932,7 +926,6 @@
     ],
     "brasov": [
       "asistent-medical",
-      "bucatar",
       "contabil",
       "curatenie",
       "curier",
@@ -1397,7 +1390,6 @@
     ],
     "satu-mare": [
       "asistent-medical",
-      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1480,8 +1472,6 @@
       "manipulant",
       "mecanic",
       "sofer",
-      "stivuitorist",
-      "sudor",
       "tamplar",
       "vanzator",
       "zidar"
