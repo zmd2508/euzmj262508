@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-06T09:19:16.719Z",
-  "totalActiveJobsScanned": 7623,
-  "totalJobsMapped": 4924,
+  "updatedAt": "2026-11-06T20:26:13.380Z",
+  "totalActiveJobsScanned": 7700,
+  "totalJobsMapped": 4965,
   "byTrade": {
     "sofer": [
       "alba",
@@ -141,6 +141,7 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
+      "brasov",
       "bucuresti",
       "buzau",
       "caras-severin",
@@ -333,6 +334,7 @@
       "satu-mare",
       "sibiu",
       "timis",
+      "valcea",
       "vaslui",
       "vrancea"
     ],
@@ -354,7 +356,6 @@
       "galati",
       "giurgiu",
       "gorj",
-      "harghita",
       "hunedoara",
       "ialomita",
       "iasi",
@@ -391,6 +392,7 @@
       "galati",
       "giurgiu",
       "gorj",
+      "harghita",
       "hunedoara",
       "ialomita",
       "iasi",
@@ -441,7 +443,6 @@
       "prahova",
       "salaj",
       "sibiu",
-      "suceava",
       "timis",
       "tulcea",
       "valcea",
@@ -640,7 +641,6 @@
       "alba",
       "arad",
       "arges",
-      "bacau",
       "bihor",
       "brasov",
       "bucuresti",
@@ -694,6 +694,7 @@
     ],
     "contabil": [
       "alba",
+      "arad",
       "arges",
       "bacau",
       "bihor",
@@ -799,6 +800,7 @@
     ],
     "arad": [
       "bucatar",
+      "contabil",
       "croitor",
       "curatenie",
       "curier",
@@ -843,7 +845,6 @@
       "contabil",
       "croitor",
       "curatenie",
-      "curier",
       "electrician",
       "inginer",
       "lacatus",
@@ -937,6 +938,7 @@
     ],
     "brasov": [
       "asistent-medical",
+      "bucatar",
       "contabil",
       "curatenie",
       "curier",
@@ -1196,9 +1198,9 @@
       "mecanic",
       "ospatar",
       "sofer",
-      "sudor",
       "tamplar",
-      "vanzator"
+      "vanzator",
+      "zidar"
     ],
     "hunedoara": [
       "asistent-medical",
@@ -1472,7 +1474,6 @@
       "mecanic",
       "ospatar",
       "sofer",
-      "stivuitorist",
       "tamplar",
       "vanzator",
       "zidar"
@@ -1563,6 +1564,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
