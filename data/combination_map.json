@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-05T21:05:03.063Z",
-  "totalActiveJobsScanned": 7594,
-  "totalJobsMapped": 4908,
+  "updatedAt": "2026-11-06T09:19:16.719Z",
+  "totalActiveJobsScanned": 7623,
+  "totalJobsMapped": 4924,
   "byTrade": {
     "sofer": [
       "alba",
@@ -163,7 +163,6 @@
       "olt",
       "prahova",
       "salaj",
-      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -312,6 +311,7 @@
       "braila",
       "brasov",
       "bucuresti",
+      "caras-severin",
       "cluj",
       "constanta",
       "covasna",
@@ -612,7 +612,6 @@
       "caras-severin",
       "cluj",
       "constanta",
-      "covasna",
       "dambovita",
       "dolj",
       "galati",
@@ -1007,6 +1006,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "paznic",
       "sofer",
       "sudor",
       "vanzator",
@@ -1078,7 +1078,6 @@
       "lacatus",
       "manipulant",
       "mecanic",
-      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1405,7 +1404,6 @@
       "zidar"
     ],
     "satu-mare": [
-      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
