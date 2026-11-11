@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-10T20:52:09.093Z",
-  "totalActiveJobsScanned": 7709,
-  "totalJobsMapped": 4990,
+  "updatedAt": "2026-11-11T09:20:13.177Z",
+  "totalActiveJobsScanned": 7569,
+  "totalJobsMapped": 4902,
   "byTrade": {
     "sofer": [
       "alba",
@@ -145,6 +145,7 @@
       "brasov",
       "bucuresti",
       "buzau",
+      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -473,7 +474,6 @@
       "ilfov",
       "maramures",
       "mehedinti",
-      "mures",
       "neamt",
       "olt",
       "prahova",
@@ -1017,6 +1017,7 @@
       "zidar"
     ],
     "calarasi": [
+      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1346,7 +1347,6 @@
       "sofer",
       "stivuitorist",
       "sudor",
-      "tamplar",
       "vanzator",
       "zidar"
     ],
