@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-11T09:20:13.177Z",
-  "totalActiveJobsScanned": 7569,
-  "totalJobsMapped": 4902,
+  "updatedAt": "2026-11-11T21:19:17.997Z",
+  "totalActiveJobsScanned": 7789,
+  "totalJobsMapped": 5071,
   "byTrade": {
     "sofer": [
       "alba",
@@ -157,6 +157,7 @@
       "gorj",
       "harghita",
       "hunedoara",
+      "ialomita",
       "iasi",
       "ilfov",
       "maramures",
@@ -207,6 +208,7 @@
       "olt",
       "prahova",
       "salaj",
+      "satu-mare",
       "sibiu",
       "suceava",
       "timis",
@@ -356,6 +358,7 @@
       "galati",
       "giurgiu",
       "gorj",
+      "harghita",
       "hunedoara",
       "ialomita",
       "iasi",
@@ -444,7 +447,6 @@
       "salaj",
       "sibiu",
       "timis",
-      "tulcea",
       "valcea",
       "vaslui",
       "vrancea"
@@ -591,6 +593,7 @@
       "olt",
       "prahova",
       "salaj",
+      "satu-mare",
       "sibiu",
       "suceava",
       "teleorman",
@@ -614,6 +617,7 @@
       "caras-severin",
       "cluj",
       "constanta",
+      "covasna",
       "dambovita",
       "dolj",
       "galati",
@@ -662,6 +666,7 @@
       "vrancea"
     ],
     "asistent-medical": [
+      "alba",
       "arges",
       "bacau",
       "bihor",
@@ -756,6 +761,7 @@
       "dolj",
       "galati",
       "giurgiu",
+      "gorj",
       "harghita",
       "hunedoara",
       "ialomita",
@@ -779,6 +785,7 @@
   },
   "byCounty": {
     "alba": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1084,6 +1091,7 @@
       "lacatus",
       "manipulant",
       "mecanic",
+      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1179,6 +1187,7 @@
       "croitor",
       "curatenie",
       "electrician",
+      "inginer",
       "lacatus",
       "manipulant",
       "mecanic",
@@ -1204,6 +1213,7 @@
       "mecanic",
       "ospatar",
       "sofer",
+      "sudor",
       "tamplar",
       "vanzator",
       "zidar"
@@ -1231,6 +1241,7 @@
     ],
     "ialomita": [
       "asistent-medical",
+      "bucatar",
       "contabil",
       "croitor",
       "curatenie",
@@ -1413,9 +1424,11 @@
     ],
     "satu-mare": [
       "contabil",
+      "croitor",
       "curatenie",
       "inginer",
       "lacatus",
+      "manipulant",
       "mecanic",
       "operator-cnc",
       "ospatar",
@@ -1529,7 +1542,6 @@
       "operator-cnc",
       "ospatar",
       "sofer",
-      "stivuitorist",
       "sudor",
       "tamplar",
       "vanzator",
