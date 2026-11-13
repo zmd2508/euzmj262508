@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-13T09:31:51.616Z",
-  "totalActiveJobsScanned": 7980,
-  "totalJobsMapped": 5206,
+  "updatedAt": "2026-11-13T20:56:24.454Z",
+  "totalActiveJobsScanned": 8264,
+  "totalJobsMapped": 5390,
   "byTrade": {
     "sofer": [
       "alba",
@@ -327,6 +327,7 @@
       "ialomita",
       "iasi",
       "ilfov",
+      "maramures",
       "mehedinti",
       "mures",
       "neamt",
@@ -336,6 +337,7 @@
       "sibiu",
       "suceava",
       "timis",
+      "tulcea",
       "valcea",
       "vaslui",
       "vrancea"
@@ -373,7 +375,8 @@
       "sibiu",
       "timis",
       "tulcea",
-      "valcea"
+      "valcea",
+      "vrancea"
     ],
     "zidar": [
       "alba",
@@ -433,6 +436,7 @@
       "dolj",
       "galati",
       "gorj",
+      "harghita",
       "hunedoara",
       "ialomita",
       "iasi",
@@ -492,8 +496,10 @@
       "arad",
       "arges",
       "bacau",
+      "bihor",
       "bistrita-nasaud",
       "botosani",
+      "braila",
       "brasov",
       "bucuresti",
       "buzau",
@@ -648,7 +654,6 @@
       "brasov",
       "bucuresti",
       "calarasi",
-      "caras-severin",
       "cluj",
       "constanta",
       "dambovita",
@@ -676,6 +681,7 @@
       "cluj",
       "constanta",
       "covasna",
+      "dolj",
       "galati",
       "harghita",
       "hunedoara",
@@ -875,6 +881,7 @@
       "lacatus",
       "manipulant",
       "mecanic",
+      "operator-cnc",
       "ospatar",
       "paznic",
       "sofer",
@@ -933,6 +940,7 @@
       "lacatus",
       "manipulant",
       "mecanic",
+      "operator-cnc",
       "ospatar",
       "paznic",
       "sofer",
@@ -1006,7 +1014,6 @@
       "contabil",
       "croitor",
       "curatenie",
-      "curier",
       "electrician",
       "inginer",
       "lacatus",
@@ -1115,6 +1122,7 @@
       "zidar"
     ],
     "dolj": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1206,6 +1214,7 @@
       "mecanic",
       "ospatar",
       "sofer",
+      "stivuitorist",
       "sudor",
       "tamplar",
       "vanzator"
@@ -1309,6 +1318,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "paznic",
       "sofer",
       "stivuitorist",
       "tamplar",
@@ -1535,6 +1545,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "paznic",
       "sofer",
       "sudor",
       "tamplar",
@@ -1598,6 +1609,7 @@
       "paznic",
       "sofer",
       "stivuitorist",
+      "sudor",
       "vanzator",
       "zidar"
     ]
