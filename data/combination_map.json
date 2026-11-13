@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-12T21:30:04.162Z",
-  "totalActiveJobsScanned": 8087,
-  "totalJobsMapped": 5271,
+  "updatedAt": "2026-11-13T09:31:51.616Z",
+  "totalActiveJobsScanned": 7980,
+  "totalJobsMapped": 5206,
   "byTrade": {
     "sofer": [
       "alba",
@@ -10,7 +10,6 @@
       "bacau",
       "bihor",
       "bistrita-nasaud",
-      "botosani",
       "braila",
       "brasov",
       "bucuresti",
@@ -690,6 +689,7 @@
       "prahova",
       "sibiu",
       "suceava",
+      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -918,7 +918,6 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
-      "sofer",
       "stivuitorist",
       "sudor",
       "tamplar",
@@ -1488,6 +1487,7 @@
       "zidar"
     ],
     "teleorman": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
