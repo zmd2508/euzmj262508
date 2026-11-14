@@ -26,11 +26,11 @@ const TARGET_COUNTRIES = [
     { code: 'nl', name: 'Olanda', flag: '🇳🇱', key: 'NL', maxPages: 120 },
     { code: 'be', name: 'Belgia', flag: '🇧🇪', key: 'BE', maxPages: 80 },
     { code: 'at', name: 'Austria', flag: '🇦🇹', key: 'AT', maxPages: 90 },
-    { 
-        code: 'de', 
-        name: 'Germania', 
-        flag: '🇩🇪', 
-        key: 'DE', 
+    {
+        code: 'de',
+        name: 'Germania',
+        flag: '🇩🇪',
+        key: 'DE',
         maxPages: 300,
         subLocations: [
             { name: 'Sud & Est (BW, BY, BE, BB)', codes: ['de1', 'de2', 'de3', 'de4'] },
@@ -263,7 +263,7 @@ function extractEuroSalary(rawText, countryCode = '') {
             if (!isNaN(val1) && val1 >= 10 && val1 <= 150) {
                 const val2 = m[2] ? parseFloat(m[2].replace(',', '.')) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 150) 
+                const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 150)
                     ? `€${val1.toFixed(2)} - €${val2.toFixed(2)} / oră`
                     : `€${val1.toFixed(2)} / oră`;
                 return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: val1 };
@@ -331,7 +331,7 @@ function extractEuroSalary(rawText, countryCode = '') {
                 const numStr2 = m[2] ? m[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, '') : null;
                 const annual2 = numStr2 ? parseFloat(numStr2) : null;
                 const monthly2 = annual2 && annual2 > annual1 ? Math.round(annual2 / 12) : null;
-                const displayVal = monthly2 
+                const displayVal = monthly2
                     ? `€${monthly1.toLocaleString('ro-RO')} - €${monthly2.toLocaleString('ro-RO')} / lună`
                     : `€${monthly1.toLocaleString('ro-RO')} / lună`;
                 return { salaryMin: displayVal, salaryType: 'gross', rawValue: monthly1 };
@@ -395,8 +395,8 @@ function detectAccommodationOffer(description, title = '') {
     // 1. HARD DISQUALIFIERS (False Positives & Sneaky Edge Cases)
 
     // Edge Case A: 'Reasonable accommodation' (US/Corporate Disability legal boilerplate)
-    const isOnlyDisabilityAccommodation = 
-        /reasonable accommodation/i.test(text) && 
+    const isOnlyDisabilityAccommodation =
+        /reasonable accommodation/i.test(text) &&
         !/\b(?:housing|apartment|single[- ]room|rent|living space|snf)\b/i.test(text);
 
     if (isOnlyDisabilityAccommodation) return { hasAccommodation: false, type: null };
@@ -558,12 +558,12 @@ function extractLocationDetails(job, countryObj) {
 
 function isStrictlyEnglish(title, description) {
     const text = `${title || ''} ${description || ''}`.toLowerCase();
-    
+
     // Disqualifying German headings (Notice: removed metadata tokens like vollzeit, arbeitsort, fachkraft, helfer, unternehmen)
     const pureGermanHeadings = [
         /\b(wir suchen\b|ihre aufgaben\b|ihr profil\b|unser angebot\b|über uns\b|bewerbung einreichen|bewerben sie sich|lebenslauf und anschreiben|vorstellungsgespräch\b|anforderungsprofil\b|stellenbeschreibung\b|arbeitsvertrag\b|abgeschlossene ausbildung\b)/gi
     ];
-    
+
     // Disqualifying Dutch headings
     const pureDutchHeadings = [
         /\b(wij zoeken\b|wat ga je doen\b|wat breng je mee\b|wat bieden wij\b|over ons\b|solliciteer direct|cv en motivatie|arbeidsovereenkomst\b|functie-eisen\b|takenpakket\b|reiskostenvergoeding\b)/gi
@@ -678,7 +678,7 @@ const AGENCY_SEMANTIC_PATTERNS = [
 
 function identifyEuAgency(rawEmp, title = '', desc = '') {
     let emp = (rawEmp || '').trim();
-    const isPlaceholder = !emp || 
+    const isPlaceholder = !emp ||
         /^(?:eures|angajator european|angajator european verificat|angajator european verificat \(eures\)|siehe beschreibung|zie omschrijving|confidential|see description)$/i.test(emp);
 
     const fullText = `${emp} ${title || ''} ${desc || ''}`.toLowerCase();
@@ -781,8 +781,8 @@ async function fetchWidkJobs() {
                 if (raw.region) locParts.push(raw.region);
                 const locationStr = locParts.length > 0 ? `Danemarca (${locParts.join(', ')})` : 'Danemarca';
 
-                const officialUrl = raw.isExternal && raw.jobAdUrl 
-                    ? raw.jobAdUrl 
+                const officialUrl = raw.isExternal && raw.jobAdUrl
+                    ? raw.jobAdUrl
                     : `https://workindenmark.jobnet.dk/find-job/${raw.jobAdId}`;
 
                 widkJobs.push({
@@ -1229,7 +1229,7 @@ async function fetchJobsForCountry(countryObj) {
     }
 
     // Determine query targets (partitioned regions or single country code)
-    const targetPartitions = countryObj.subLocations 
+    const targetPartitions = countryObj.subLocations
         ? countryObj.subLocations.map(s => ({ label: s.name, codes: s.codes }))
         : [{ label: countryObj.name, codes: [countryObj.code] }];
 
@@ -1287,7 +1287,7 @@ async function fetchJobsForCountry(countryObj) {
             if (prevList.length > 0) {
                 cachedCountryJobs = prevList;
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     if (cachedCountryJobs.length > 20 && allCountryJobs.length < (cachedCountryJobs.length * 0.1)) {
@@ -1409,6 +1409,140 @@ function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
     });
 }
 
+// ==========================================
+// ⚡ FLAT TUPLE ENCODER / DECODER
+// ==========================================
+
+function encodeEventsToFlatTuples(events) {
+    const typeSet = new Set(['JOB_ADDED', 'JOB_FILLED_OR_CLOSED', 'JOB_EXPIRED', 'POSITIONS_DECREASED', 'POSITIONS_INCREASED']);
+    const countrySet = new Set(['NL', 'DE', 'BE', 'AT', 'DK', 'FR', 'NO', 'SE', 'OTHER']);
+    const domainSet = new Set();
+    const employerSet = new Set();
+    const occupationSet = new Set();
+    const salarySet = new Set(['Nespecificat']);
+
+    events.forEach(e => {
+        if (e.event_type) typeSet.add(e.event_type);
+        if (e.domain) domainSet.add(e.domain);
+        if (e.employer_name) employerSet.add(e.employer_name);
+        if (e.occupation) occupationSet.add(e.occupation);
+        if (e.salary) salarySet.add(e.salary);
+    });
+
+    const types = Array.from(typeSet);
+    const countries = Array.from(countrySet);
+    const domains = Array.from(domainSet);
+    const employers = Array.from(employerSet);
+    const occupations = Array.from(occupationSet);
+    const salaries = Array.from(salarySet);
+
+    const typeMap = new Map(types.map((v, i) => [v, i]));
+    const countryMap = new Map(countries.map((v, i) => [v, i]));
+    const domainMap = new Map(domains.map((v, i) => [v, i]));
+    const employerMap = new Map(employers.map((v, i) => [v, i]));
+    const occupationMap = new Map(occupations.map((v, i) => [v, i]));
+    const salaryMap = new Map(salaries.map((v, i) => [v, i]));
+
+    const helperCountry = (loc) => {
+        const u = (loc || '').toUpperCase();
+        if (u.includes('OLANDA') || u.includes('NETHERLANDS')) return 'NL';
+        if (u.includes('GERMANIA') || u.includes('GERMANY')) return 'DE';
+        if (u.includes('BELGIA') || u.includes('BELGIUM')) return 'BE';
+        if (u.includes('AUSTRIA')) return 'AT';
+        if (u.includes('DANEMARCA') || u.includes('DENMARK')) return 'DK';
+        if (u.includes('FRANȚA') || u.includes('FRANCE') || u.includes('FRANTA')) return 'FR';
+        if (u.includes('NORVEGIA') || u.includes('NORWAY')) return 'NO';
+        if (u.includes('SUEDIA') || u.includes('SWEDEN')) return 'SE';
+        return 'OTHER';
+    };
+
+    const flatTuples = events.map(e => {
+        const ts = e.created_at ? Math.floor(new Date(e.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000);
+        const tIdx = typeMap.has(e.event_type) ? typeMap.get(e.event_type) : 0;
+        const cCode = helperCountry(e.location);
+        const cIdx = countryMap.has(cCode) ? countryMap.get(cCode) : 8;
+        const dIdx = domainMap.has(e.domain) ? domainMap.get(e.domain) : -1;
+        const empIdx = employerMap.has(e.employer_name) ? employerMap.get(e.employer_name) : -1;
+        const occIdx = occupationMap.has(e.occupation) ? occupationMap.get(e.occupation) : -1;
+        const delta = e.delta_positions || 1;
+        const salIdx = salaryMap.has(e.salary) ? salaryMap.get(e.salary) : 0;
+        const housing = e.has_accommodation ? 1 : 0;
+        const isAgency = e.is_agency ? 1 : 0;
+        const id = e.id || '';
+
+        return [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id];
+    });
+
+    return {
+        version: 1,
+        updated_at: new Date().toISOString(),
+        total_events: flatTuples.length,
+        dict: {
+            types,
+            countries,
+            domains,
+            employers,
+            occupations,
+            salaries
+        },
+        events: flatTuples
+    };
+}
+
+function decodeFlatTuplesToEvents(flatObj) {
+    if (!flatObj || !flatObj.dict || !Array.isArray(flatObj.events)) return [];
+    const { types, countries, domains, employers, occupations, salaries } = flatObj.dict;
+
+    const countryLabels = {
+        'NL': 'Olanda',
+        'DE': 'Germania',
+        'BE': 'Belgia',
+        'AT': 'Austria',
+        'DK': 'Danemarca',
+        'FR': 'Franța',
+        'NO': 'Norvegia',
+        'SE': 'Suedia',
+        'OTHER': 'UE'
+    };
+
+    return flatObj.events.map(t => {
+        const [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id] = t;
+        const cCode = countries[cIdx] || 'OTHER';
+        return {
+            id: id || `eures-${ts}`,
+            created_at: new Date(ts * 1000).toISOString(),
+            event_type: types[tIdx] || 'JOB_ADDED',
+            country_code: cCode,
+            location: countryLabels[cCode] || cCode,
+            domain: dIdx >= 0 ? (domains[dIdx] || 'Altele') : 'Altele',
+            employer_name: empIdx >= 0 ? (employers[empIdx] || 'Angajator Direct UE') : 'Angajator Direct UE',
+            occupation: occIdx >= 0 ? (occupations[occIdx] || 'Ofertă') : 'Ofertă',
+            delta_positions: delta,
+            salary: salIdx >= 0 ? (salaries[salIdx] || 'Nespecificat') : 'Nespecificat',
+            has_accommodation: housing === 1,
+            is_agency: isAgency === 1
+        };
+    });
+}
+
+async function fetchFromPrivateRepo(pat, targetRepo, filePathInRepo) {
+    if (!pat || !targetRepo || !targetRepo.includes('/')) return null;
+    const [owner, repo] = targetRepo.split('/');
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePathInRepo}`;
+    const headers = {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github.v3.raw',
+        'User-Agent': 'Eures-Private-Sync-Bot'
+    };
+    try {
+        const res = await fetch(url, { headers });
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) { }
+    return null;
+}
+
 async function pushToPrivateRepo(pat, targetRepo, filePathInRepo, contentObj, commitMessage) {
     if (!pat || !targetRepo || !targetRepo.includes('/')) return false;
     const [owner, repo] = targetRepo.split('/');
@@ -1427,7 +1561,7 @@ async function pushToPrivateRepo(pat, targetRepo, filePathInRepo, contentObj, co
             const data = await getRes.json();
             sha = data.sha;
         }
-    } catch (_) {}
+    } catch (_) { }
 
     const body = {
         message: commitMessage || `Update ${filePathInRepo}`,
@@ -1557,17 +1691,53 @@ async function runSync() {
     let existingEvents = [];
     let existingHistory = [];
 
-    const eventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
+    const privatePat = process.env.PRIVATE_REPO_PAT;
+    const privateTarget = process.env.PRIVATE_REPO_TARGET;
+
+    // A. Fetch existing history from Private Repo first (preserves history across ephemeral CI runners)
+    if (privatePat && privateTarget) {
+        console.log(`📥 Fetching existing rolling history from private vault (${privateTarget})...`);
+        const [vaultFlatEvents, vaultLegacyEvents, vaultHistory] = await Promise.all([
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json'),
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json'),
+            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json')
+        ]);
+
+        if (vaultFlatEvents && vaultFlatEvents.dict && Array.isArray(vaultFlatEvents.events)) {
+            existingEvents = decodeFlatTuplesToEvents(vaultFlatEvents);
+            console.log(`  ✓ Decoded ${existingEvents.length} existing market events from Flat Tuple vault.`);
+        } else if (Array.isArray(vaultLegacyEvents) && vaultLegacyEvents.length > 0) {
+            existingEvents = vaultLegacyEvents;
+            console.log(`  ✓ Found ${existingEvents.length} existing market events in legacy vault.`);
+        }
+
+        if (Array.isArray(vaultHistory) && vaultHistory.length > 0) {
+            existingHistory = vaultHistory;
+            console.log(`  ✓ Found ${existingHistory.length} historical sync checkpoints in private vault.`);
+        }
+    }
+
+    // B. Fallback to local files if available
+    const flatEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events_flat.json') : null;
+    const legacyEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
     const historyPath = primaryDir ? path.join(primaryDir, 'eu_sync_history.json') : null;
 
-    if (eventsPath && fs.existsSync(eventsPath)) {
-        try { existingEvents = JSON.parse(fs.readFileSync(eventsPath, 'utf8')); } catch (_) {}
+    if (existingEvents.length === 0 && flatEventsPath && fs.existsSync(flatEventsPath)) {
+        try {
+            const raw = JSON.parse(fs.readFileSync(flatEventsPath, 'utf8'));
+            existingEvents = decodeFlatTuplesToEvents(raw);
+        } catch (_) { }
     }
-    if (historyPath && fs.existsSync(historyPath)) {
-        try { existingHistory = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) {}
+    if (existingEvents.length === 0 && legacyEventsPath && fs.existsSync(legacyEventsPath)) {
+        try { existingEvents = JSON.parse(fs.readFileSync(legacyEventsPath, 'utf8')); } catch (_) { }
+    }
+    if (existingHistory.length === 0 && historyPath && fs.existsSync(historyPath)) {
+        try { existingHistory = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) { }
     }
 
-    const updatedEvents = [...newEvents, ...existingEvents].slice(0, 1500);
+    // Cumulative full events list without goldfish cap (stores 100% of events)
+    const cumulativeEvents = [...newEvents, ...existingEvents];
+    const flatPayload = encodeEventsToFlatTuples(cumulativeEvents);
 
     const historyPoint = {
         date: now.toISOString().split('T')[0],
@@ -1584,19 +1754,17 @@ async function runSync() {
     // Save locally
     DATA_DIRS.forEach(dir => {
         try {
-            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(updatedEvents, null, 2), 'utf8');
+            fs.writeFileSync(path.join(dir, 'eu_market_events_flat.json'), JSON.stringify(flatPayload), 'utf8');
+            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(cumulativeEvents.slice(0, 500), null, 2), 'utf8');
             fs.writeFileSync(path.join(dir, 'eu_sync_history.json'), JSON.stringify(updatedHistory, null, 2), 'utf8');
-        } catch (_) {}
+        } catch (_) { }
     });
 
     // 4. Push to Private Repo if GitHub Secrets exist
-    const privatePat = process.env.PRIVATE_REPO_PAT;
-    const privateTarget = process.env.PRIVATE_REPO_TARGET;
-
     if (privatePat && privateTarget) {
-        console.log(`\n🔒 Pushing intelligence to private repository (${privateTarget})...`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json', updatedEvents, `Sync EU Market Events - ${now.toISOString().split('T')[0]}`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History Checkpoint - ${now.toISOString().split('T')[0]}`);
+        console.log(`\n🔒 Pushing Flat Tuple intelligence to private repository (${privateTarget})...`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json', flatPayload, `Sync EU Flat Events (${cumulativeEvents.length} events) - ${now.toISOString().split('T')[0]}`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History (${updatedHistory.length} checkpoints) - ${now.toISOString().split('T')[0]}`);
     }
 
     // 5. Automatic jsDelivr Edge CDN Cache Purge (Ensures 0 delay for all global users)
@@ -1607,9 +1775,9 @@ async function runSync() {
             'meta_all.json', 'meta_de.json', 'meta_nl.json', 'meta_be.json', 'meta_at.json', 'meta_dk.json', 'meta_fr.json', 'meta_no.json', 'meta_se.json',
             'pages/all/1.json', 'pages/de/1.json', 'pages/nl/1.json', 'pages/be/1.json', 'pages/at/1.json', 'pages/dk/1.json', 'pages/fr/1.json', 'pages/no/1.json', 'pages/se/1.json'
         ];
-        await Promise.all(cdnFiles.map(f => fetch(`https://purge.jsdelivr.net/gh/zmd2508/euzmj262508@main/data/${f}`).catch(() => {})));
+        await Promise.all(cdnFiles.map(f => fetch(`https://purge.jsdelivr.net/gh/zmd2508/euzmj262508@main/data/${f}`).catch(() => { })));
         console.log('✅ jsDelivr Edge CDN cache purged successfully.');
-    } catch (_) {}
+    } catch (_) { }
 }
 
 runSync();
