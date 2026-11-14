@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 // Standalone repo data directory (pushed to GitHub CDN)
 const DATA_DIRS = [
-    path.join(__dirname, 'data')
+    path.join(__dirname, '..', 'euzmj_scraper', 'data')
 ].filter(d => {
     try {
         if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
@@ -39,7 +39,9 @@ const TARGET_COUNTRIES = [
         ]
     },
     { code: 'dk', name: 'Danemarca', flag: '🇩🇰', key: 'DK', maxPages: 30 },
-    { code: 'fr', name: 'Franța', flag: '🇫🇷', key: 'FR', maxPages: 30 }
+    { code: 'fr', name: 'Franța', flag: '🇫🇷', key: 'FR', maxPages: 30 },
+    { code: 'no', name: 'Norvegia', flag: '🇳🇴', key: 'NO', maxPages: 50 },
+    { code: 'se', name: 'Suedia', flag: '🇸🇪', key: 'SE', maxPages: 50 }
 ];
 
 export function mapIscoToDomain(iscoCode) {
@@ -229,7 +231,6 @@ function cleanHtmlDescription(rawHtml) {
     text = text.replace(/<h[1-6][^>]*>/gi, '\n\n');
     text = text.replace(/<\/h[1-6]>/gi, '\n');
     text = text.replace(/<[^>]*>/g, '');
-    text = text.replace(/<[a-z0-9\/\s]*$/gi, '');
 
     text = text
         .replace(/&nbsp;/gi, ' ')
@@ -244,149 +245,143 @@ function cleanHtmlDescription(rawHtml) {
     return text;
 }
 
-function extractEuroSalary(rawText) {
+function extractEuroSalary(rawText, countryCode = '') {
     if (!rawText) return { salaryMin: null, salaryType: 'none', rawValue: null };
-    
-    // Clean HTML and normalize spaces
-    let text = rawText
-        .replace(/&nbsp;/gi, ' ')
-        .replace(/\u00a0/g, ' ')
-        .replace(/&euro;/gi, '€')
-        .replace(/\r\n/g, '\n');
+    const clean = rawText.replace(/\u00a0/g, ' ').replace(/&euro;/gi, '€');
 
-    // 1. HARD DISQUALIFIERS (Ignore travel allowances & non-salary numbers)
-    text = text.replace(/(?:€|EUR)?\s*0[.,]\d{1,2}\s*(?:€|EUR|ct|cent)?\s*(?:per|\/)\s*(?:km|kilometer)/gi, '');
-
-    // 2. DISQUALIFY NON-SALARY CONTEXT (Budgets, revenues, turnover, investments, campaign funds)
-    // Strips out numbers inside sentences talking about corporate/ad budgets, company turnover, investments, grants
-    const nonSalarySentenceRegex = /([^.\n;?!]*\b(?:budget|buget|ad\s*spend|media\s*budget|marketing\s*budget|campaign\s*budget|operational\s*budget|turnover|cifr[aă]\s*de\s*afaceri|omzet|annual\s*revenue|company\s*revenue|sales\s*volume|investment|investi[tț]ii|portfolio|funding|grant|worth\s*of\s*equipment)\b[^.\n;?!]*)/gi;
-    text = text.replace(nonSalarySentenceRegex, '');
-
-    // Format Helpers
-    const formatHourly = (v1, v2, isNet) => {
-        const type = isNet ? 'net' : 'gross';
-        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 120) {
-            return { salaryMin: `€${v1.toFixed(2)} - €${v2.toFixed(2)} / oră`, salaryType: type, rawValue: v1 };
-        }
-        return { salaryMin: `€${v1.toFixed(2)} / oră`, salaryType: type, rawValue: v1 };
-    };
-
-    const formatWeekly = (v1, v2, isNet, isUpTo = false) => {
-        const type = isNet ? 'net' : 'gross';
-        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 2500) {
-            return { salaryMin: `€${v1} - €${v2} / săpt`, salaryType: type, rawValue: v1 };
-        }
-        if (isUpTo) {
-            return { salaryMin: `până la €${v1} / săpt`, salaryType: type, rawValue: v1 };
-        }
-        return { salaryMin: `€${v1} / săpt`, salaryType: type, rawValue: v1 };
-    };
-
-    const formatMonthly = (v1, v2, isNet, isUpTo = false) => {
-        const type = isNet ? 'net' : 'gross';
-        if (v2 && !isNaN(v2) && v2 > v1 && v2 <= 12000) {
-            return { salaryMin: `€${v1.toLocaleString('ro-RO')} - €${v2.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
-        }
-        if (isUpTo) {
-            return { salaryMin: `până la €${v1.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
-        }
-        return { salaryMin: `€${v1.toLocaleString('ro-RO')} / lună`, salaryType: type, rawValue: v1 };
-    };
-
-    // 3. EXPLICIT LABELED SALARY FIELDS (Highest Precision First)
-    const labeledHourlyRegex = /(?:hourly\s+(?:wage|rate|salary)|uurloon|tarif\s+orar|bruto\s+uurloon|netto\s+uurloon|stundenlohn)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{1,3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
-    const labH = text.match(labeledHourlyRegex);
-    if (labH && labH[1]) {
-        const v1 = parseFloat(labH[1].replace(',', '.'));
-        if (!isNaN(v1) && v1 >= 11 && v1 <= 120) {
-            const v2 = labH[2] ? parseFloat(labH[2].replace(',', '.')) : null;
-            const isNet = /netto|\bnet\b/i.test(labH[0]);
-            return formatHourly(v1, v2, isNet);
-        }
-    }
-
-    const labeledMonthlyRegex = /(?:monthly\s+(?:wage|salary)|maandsalaris|salariu\s+lunar|monatsgehalt|bruto\s+maandsalaris|netto\s+maandsalaris)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|bis)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?/i;
-    const labM = text.match(labeledMonthlyRegex);
-    if (labM && labM[1]) {
-        const v1 = Math.round(parseFloat(labM[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '')));
-        if (!isNaN(v1) && v1 >= 1000 && v1 <= 12000) {
-            const v2 = labM[2] ? Math.round(parseFloat(labM[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, ''))) : null;
-            const isNet = /netto|\bnet\b/i.test(labM[0]);
-            const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(labM[0]);
-            return formatMonthly(v1, v2, isNet, isUpTo);
-        }
-    }
-
-    const labeledWeeklyRegex = /(?:weekly\s+(?:wage|salary|rate)|weekloon|salariu\s+s[aă]pt[aă]m[aâ]nal|wochenlohn)\s*[:=-]?\s*(?:vanaf|starting\s+from|up\s+to|tot|p[aâ]n[aă]\s+la|bis\s+zu)?\s*(?:€|EUR)?\s*(\d{3,4})\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{3,4})?\s*(?:€|EUR)?/i;
-    const labW = text.match(labeledWeeklyRegex);
-    if (labW && labW[1]) {
-        const v1 = Math.round(parseFloat(labW[1].replace(/\./g, '')));
-        if (!isNaN(v1) && v1 >= 350 && v1 <= 2500) {
-            const v2 = labW[2] ? Math.round(parseFloat(labW[2].replace(/\./g, ''))) : null;
-            const isNet = /netto|\bnet\b/i.test(labW[0]);
-            const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(labW[0]);
-            return formatWeekly(v1, v2, isNet, isUpTo);
-        }
-    }
-
-    // 4. HOURLY RATES WITH EXPLICIT CURRENCY & UNIT
-    const strictHourlyRegexes = [
-        /(?:earn(?:ing)?|salary|wage|pay|uurloon|gehalt|lohn)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf|from)?\s*(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)\s*(?:€|EUR)?\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i,
-        /(?:earn(?:ing)?|salary|wage|pay|uurloon|gehalt|lohn)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf|from)?\s*(?:€|EUR)\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i,
-        /(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|bis)?\s*(\d{1,2}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|or[aă])|\/\s*(?:h|uur|hour|stunde|or[aă])|p\/h|p\/u)\b/i
+    // 1. HOURLY RATES (€ / oră) - Range: €10 to €150 / hour
+    const hourlyRegexes = [
+        /(?:salary|salaris|lohn|pay|hourly rate|rate|bruto|netto)?\s*[:=]?\s*(?:€|EUR)?\s*([\d]{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m|\/)?\s*(?:€|EUR)?\s*([\d]{1,3}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?\s*(?:per\s*(?:hour|uur|h|stunde|oră|heure)|\/\s*(?:h|uur|hour|stunde|std|heure)|p\/h|p\/u)\b/i,
+        /(?:€|EUR)\s*([\d]{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to|t\/m)?\s*(?:€|EUR)?\s*([\d]{1,3}(?:[.,]\d{1,2})?)?\s*(?:gross|brut|net|netto)?\s*(?:per\s*(?:hour|uur|h|stunde|oră)|\/\s*(?:h|uur|hour|stunde|std)|p\/h|p\/u)\b/i,
+        /\b(?:uurloon|hourly wage|bruto per uur|netto per uur|hourly rate)\s*[:=]?\s*(?:€|EUR)?\s*([\d]{1,3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*([\d]{1,3}(?:[.,]\d{1,2})?)?/i
     ];
 
-    for (const rx of strictHourlyRegexes) {
-        const m = text.match(rx);
+    for (const rx of hourlyRegexes) {
+        const m = clean.match(rx);
         if (m && m[1]) {
-            const v1 = parseFloat(m[1].replace(',', '.'));
-            if (!isNaN(v1) && v1 >= 11 && v1 <= 95) {
-                const v2 = m[2] ? parseFloat(m[2].replace(',', '.')) : null;
+            const val1 = parseFloat(m[1].replace(',', '.'));
+            if (!isNaN(val1) && val1 >= 10 && val1 <= 150) {
+                const val2 = m[2] ? parseFloat(m[2].replace(',', '.')) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                return formatHourly(v1, v2, isNet);
+                const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 150) 
+                    ? `€${val1.toFixed(2)} - €${val2.toFixed(2)} / oră`
+                    : `€${val1.toFixed(2)} / oră`;
+                return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: val1 };
             }
         }
     }
 
-    // 5. WEEKLY RATES (Dutch staffing agency packages)
-    const strictWeeklyRegexes = [
-        /(?:earn(?:ing)?|salary|wage|pay|weekloon|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{3,4})\s*(?:-|–|tot|to|t\/m|bis)?\s*(?:€|EUR)?\s*(\d{3,4})?\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:week|woche|s[aă]pt[aă]m[aâ]n[aă])|\/\s*(?:week|woche|s[aă]pt)|\b(?:p\/w|pw)\b)/i,
-        /(\d{3,4})\s*(?:-|–|tot|to)?\s*(\d{3,4})?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:week|woche|s[aă]pt[aă]m[aâ]n[aă])|\/\s*(?:week|woche|s[aă]pt)|\b(?:p\/w|pw)\b)/i
+    // 2. WEEKLY RATES (€ / săptămână) - Range: €350 to €3,000 / week
+    const weeklyRegexes = [
+        /(?:salary|salaris|pay|weekly)?\s*[:=]?\s*(?:€|EUR)?\s*([\d]{3,4}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*([\d]{3,4}(?:[.,]\d{1,2})?)?\s*(?:€|EUR)?\s*(?:per\s*(?:week|woche|săptămână)|\/\s*(?:week|woche|saptamana)|p\/w)\b/i
     ];
 
-    for (const rx of strictWeeklyRegexes) {
-        const m = text.match(rx);
+    for (const rx of weeklyRegexes) {
+        const m = clean.match(rx);
         if (m && m[1]) {
-            const v1 = Math.round(parseFloat(m[1].replace(/\./g, '')));
-            if (!isNaN(v1) && v1 >= 350 && v1 <= 2500) {
-                const v2 = m[2] ? Math.round(parseFloat(m[2].replace(/\./g, ''))) : null;
+            const val1 = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+            if (!isNaN(val1) && val1 >= 350 && val1 <= 3000) {
+                const val2 = m[2] ? parseFloat(m[2].replace(/\./g, '').replace(',', '.')) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(m[0]);
-                return formatWeekly(v1, v2, isNet, isUpTo);
+                const approxMonthly1 = Math.round(val1 * 4.33);
+                const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 3000)
+                    ? `€${Math.round(val1)} - €${Math.round(val2)} / săpt`
+                    : `€${Math.round(val1)} / săpt`;
+                return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: approxMonthly1 };
             }
         }
     }
 
-    // 6. MONTHLY RATES WITH EXPLICIT CURRENCY & TIME UNIT
-    const strictMonthlyRegexes = [
-        /(?:earn(?:ing)?|salary|wage|pay|gehalt|lohn|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to|bis)\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
-        /(?:earn(?:ing)?|salary|wage|pay|gehalt|lohn|salaris)?\s*(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu|vanaf)?\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
-        /(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)?\s*(\d{1,2}[.,]?\d{3})?\s*(?:€|EUR)\s*(?:gross|brut|bruto|net|netto)?\s*(?:per\s*(?:month|maand|monat|lun[aă])|\/\s*(?:m|maand|month|monat|lun[aă])|\bpm\b)/i,
-        /(?:salary|salaris|lohn|gehalt)\s*[:=-]\s*(?:€|EUR)\s*(\d{1,2}[.,]?\d{3})\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*(\d{1,2}[.,]?\d{3})?\b/i
+    // 3. MONTHLY RATES (€ / lună) - Range: €800 to €25,000 / month
+    const monthlyRegexes = [
+        /(?:salary|salaris|lohn|gehalt|pay|remuneration|stipend)?\s*[:=]?\s*(?:€|EUR)\s*([\d]{1,2}[.,]?[\d]{3}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*([\d]{1,2}[.,]?[\d]{3}(?:[.,]\d{1,2})?)?\s*(?:per\s*(?:month|maand|monat|lună|mois)|\/\s*(?:m|maand|month|monat)|gross|brut|net|netto|pm)?/i,
+        /\b(?:€|EUR)\s*([\d]{4})\s*(?:-|–|tot|to)\s*(?:€|EUR)?\s*([\d]{4})\b/i,
+        /\b(?:salaris|salary|gehalt|lohn)\s*[:=]\s*(?:€|EUR)?\s*([\d]{1,2}[.,]?[\d]{3})\b/i
     ];
 
-    for (const rx of strictMonthlyRegexes) {
-        const m = text.match(rx);
+    for (const rx of monthlyRegexes) {
+        const m = clean.match(rx);
         if (m && m[1]) {
             const numStr1 = m[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '');
-            const v1 = Math.round(parseFloat(numStr1));
-            if (!isNaN(v1) && v1 >= 1000 && v1 <= 12000) {
+            const val1 = Math.round(parseFloat(numStr1));
+            if (!isNaN(val1) && val1 >= 800 && val1 <= 25000) {
                 const numStr2 = m[2] ? m[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, '') : null;
-                const v2 = numStr2 ? Math.round(parseFloat(numStr2)) : null;
+                const val2 = numStr2 ? Math.round(parseFloat(numStr2)) : null;
                 const isNet = /netto|\bnet\b/i.test(m[0]);
-                const isUpTo = /(?:up\s+to|p[aâ]n[aă]\s+la|tot|bis\s+zu)/i.test(m[0]);
-                return formatMonthly(v1, v2, isNet, isUpTo);
+                const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 25000)
+                    ? `€${val1.toLocaleString('ro-RO')} - €${val2.toLocaleString('ro-RO')} / lună`
+                    : `€${val1.toLocaleString('ro-RO')} / lună`;
+                return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: val1 };
             }
+        }
+    }
+
+    // 4. ANNUAL RATES (€ / an) - Range: €20,000 to €250,000 / year (Normalized to Monthly)
+    const annualRegexes = [
+        /(?:salary|salaris|gehalt|annual)?\s*[:=]?\s*(?:€|EUR)?\s*([\d]{2,3}[.,]?[\d]{3})\s*(?:-|–|tot|to)?\s*(?:€|EUR)?\s*([\d]{2,3}[.,]?[\d]{3})?\s*(?:€|EUR)?\s*(?:per\s*(?:year|annum|jaar|jahr|an)|\/\s*(?:year|yr|jaar|jahr|annum)|p\/a|p\.a\.)/i
+    ];
+
+    for (const rx of annualRegexes) {
+        const m = clean.match(rx);
+        if (m && m[1]) {
+            const numStr1 = m[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '');
+            const annual1 = parseFloat(numStr1);
+            if (!isNaN(annual1) && annual1 >= 20000 && annual1 <= 300000) {
+                const monthly1 = Math.round(annual1 / 12);
+                const numStr2 = m[2] ? m[2].replace(/,/g, '').replace(/\.(?=\d{3})/g, '') : null;
+                const annual2 = numStr2 ? parseFloat(numStr2) : null;
+                const monthly2 = annual2 && annual2 > annual1 ? Math.round(annual2 / 12) : null;
+                const displayVal = monthly2 
+                    ? `€${monthly1.toLocaleString('ro-RO')} - €${monthly2.toLocaleString('ro-RO')} / lună`
+                    : `€${monthly1.toLocaleString('ro-RO')} / lună`;
+                return { salaryMin: displayVal, salaryType: 'gross', rawValue: monthly1 };
+            }
+        }
+    }
+
+    // 5. SCANDINAVIAN CURRENCIES (NOK / SEK / DKK / kr)
+    let defaultCurr = 'kr';
+    if (countryCode === 'NO') defaultCurr = 'NOK';
+    else if (countryCode === 'SE') defaultCurr = 'SEK';
+    else if (countryCode === 'DK') defaultCurr = 'DKK';
+
+    // 5A. Hourly Krona (Range: 100 to 1,500 kr/hour)
+    const scandiHourlyRegex = /(\d{2,4}(?:[.,]\d{1,2})?)\s*(?:-|–|tot|to)?\s*(\d{2,4}(?:[.,]\d{1,2})?)?\s*(nok|sek|dkk|kr|kroner|kronor)\s*(?:\/|\s*per\s*)\s*(?:hour|h|time|timme|uur)/i;
+    const mScandiHourly = clean.match(scandiHourlyRegex);
+    if (mScandiHourly && mScandiHourly[1]) {
+        const val1 = parseFloat(mScandiHourly[1].replace(',', '.'));
+        if (!isNaN(val1) && val1 >= 100 && val1 <= 1500) {
+            const val2 = mScandiHourly[2] ? parseFloat(mScandiHourly[2].replace(',', '.')) : null;
+            let detectedCurr = (mScandiHourly[3] || defaultCurr).toUpperCase();
+            if (detectedCurr === 'KR' || detectedCurr === 'KRONER' || detectedCurr === 'KRONOR') {
+                detectedCurr = defaultCurr;
+            }
+            const isNet = /netto|\bnet\b/i.test(mScandiHourly[0]);
+            const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 1500)
+                ? `${Math.round(val1)} - ${Math.round(val2)} ${detectedCurr} / oră`
+                : `${Math.round(val1)} ${detectedCurr} / oră`;
+            return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: Math.round(val1) };
+        }
+    }
+
+    // 5B. Monthly Krona (Range: 18,000 to 250,000 kr/month)
+    const scandiMonthlyRegex = /(\d{2,3}[.,\s]?\d{3})\s*(?:-|–|tot|to)?\s*(\d{2,3}[.,\s]?\d{3})?\s*(nok|sek|dkk|kr|kroner|kronor)\s*(?:\/|\s*per\s*)?\s*(?:month|mnd|måned|månad|lună|pm)?\b/i;
+    const mScandiMonthly = clean.match(scandiMonthlyRegex);
+    if (mScandiMonthly && mScandiMonthly[1]) {
+        const numStr1 = mScandiMonthly[1].replace(/[\s.,]/g, '');
+        const val1 = parseInt(numStr1, 10);
+        if (!isNaN(val1) && val1 >= 18000 && val1 <= 250000) {
+            const numStr2 = mScandiMonthly[2] ? mScandiMonthly[2].replace(/[\s.,]/g, '') : null;
+            const val2 = numStr2 ? parseInt(numStr2, 10) : null;
+            let detectedCurr = (mScandiMonthly[3] || defaultCurr).toUpperCase();
+            if (detectedCurr === 'KR' || detectedCurr === 'KRONER' || detectedCurr === 'KRONOR') {
+                detectedCurr = defaultCurr;
+            }
+            const isNet = /netto|\bnet\b/i.test(mScandiMonthly[0]);
+            const displayVal = (val2 && !isNaN(val2) && val2 > val1 && val2 <= 250000)
+                ? `${val1.toLocaleString('ro-RO')} - ${val2.toLocaleString('ro-RO')} ${detectedCurr} / lună`
+                : `${val1.toLocaleString('ro-RO')} ${detectedCurr} / lună`;
+            return { salaryMin: displayVal, salaryType: isNet ? 'net' : 'gross', rawValue: val1 };
         }
     }
 
@@ -402,10 +397,13 @@ function detectAccommodationOffer(description, title = '') {
     // Edge Case A: 'Reasonable accommodation' (US/Corporate Disability legal boilerplate)
     const isOnlyDisabilityAccommodation = 
         /reasonable accommodation/i.test(text) && 
-        !/\b(?:housing|apartment|single[- ]room|rent|living space|snf|relocation)\b/i.test(text) &&
-        !/\b(?:accommodation (?:provided|included|arranged|available|offered))\b/i.test(text.replace(/reasonable accommodation/gi, ''));
+        !/\b(?:housing|apartment|single[- ]room|rent|living space|snf)\b/i.test(text);
 
     if (isOnlyDisabilityAccommodation) return { hasAccommodation: false, type: null };
+
+    if (/if you (?:require|need) accommodation to (?:submit|apply|navigate)/i.test(text)) {
+        return { hasAccommodation: false, type: null };
+    }
 
     // Edge Case B: Hotel describing guest rooms rather than staff housing
     if (/offers? (?:luxury|exclusive|overnight|guest|hotel) accommodation to (?:guests|travelers|visitors|clients)/i.test(text) ||
@@ -413,7 +411,14 @@ function detectAccommodationOffer(description, title = '') {
         return { hasAccommodation: false, type: null };
     }
 
-    // Edge Case C: Explicit Negations or 'Own Accommodation' requirements
+    // Edge Case C: Vague relocation / moving bonuses without direct housing
+    if (/(?:relocation|moving)\s+(?:assistance|support|allowance|bonus|package)\s+(?:\([^)]*\)\s+)?(?:under\s+certain\s+conditions|terms\s+and\s+conditions|subject\s+to)/i.test(text) ||
+        /\bexpatriation\s+allowance\b/i.test(text) ||
+        /\bmoving\s+(?:expenses|costs|allowance)\b/i.test(text)) {
+        return { hasAccommodation: false, type: null };
+    }
+
+    // Edge Case D: Explicit Negations or 'Own Accommodation' requirements
     const strictDisqualifiers = [
         /(?:no|not|cannot|can't|neither|nor|without|don't|do not|never)\s+(?:help\s+(?:with|you\s+with)\s+)?(?:provide|providing|offer|have|arrange|sponsor|give|include)\s+(?:any\s+)?(?:free\s+|company\s+|temporary\s+|suitable\s+|staff\s+)?(?:accommodation|housing|living space|room|lodging|flat|apartment)/i,
         /no\s+(?:accommodation|housing|living space|lodging)\s+(?:is\s+)?(?:available|provided|offered|included|possible)/i,
@@ -422,39 +427,60 @@ function detectAccommodationOffer(description, title = '') {
         /(?:own|eigen|eigene)\s+(?:accommodation|housing|woonruimte|huisvesting|unterkunft|living space)/i,
         /(?:have|must have|need|required to have)\s+(?:your\s+|their\s+)?own\s+(?:accommodation|housing|place)/i,
         /(?:arrange|find|responsible for)\s+(?:your|their)\s+own\s+(?:accommodation|housing)/i,
-        /must reside in|must already live in|currently living in (?:the )?(?:netherlands|germany|belgium|austria|denmark)/i
+        /must reside in|must already live in|currently living in (?:the )?(?:netherlands|germany|belgium|austria|denmark|france|norway|sweden)/i
     ];
 
     for (const rx of strictDisqualifiers) {
         if (rx.test(text)) return { hasAccommodation: false, type: null };
     }
 
-    // 2. TIER 1: DIRECT PHYSICAL HOUSING (Ready-to-move-in Agency/Employer Room, Bed or Bungalow)
-    const tier1HousingPatterns = [
-        /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|covered|available|offered)\b/i,
-        /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges)\s+(?:free\s+|furnished\s+|single[- ]room\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
+    // Clean out false positive expressions like 'flat hierarchy'
+    const cleanText = text.replace(/flat hierarch(y|ies)|flat team structures/gi, '');
+
+    // 2. DEAL 1: STRICT PHYSICAL HOUSING (Direct Bed, Room, Flat, SNF certified - Free or deducted from salary)
+    const directHousingPatterns = [
+        // English
+        /\b(?:accommodation|housing|lodging)\s+(?:is\s+)?(?:provided|included|arranged|organized|covered|available|offered)\b/i,
+        /\b(?:we\s+)?(?:provide|provides|offer|offers|including|includes|arrange|arranges|organize|organizes)\s+(?:free\s+|furnished\s+|single[- ]room\s+|shared\s+|quality\s+|suitable\s+|staff\s+|company\s+)?(?:accommodation|housing|lodging|living space)\b/i,
         /\b(?:free|furnished|single[- ]room|private[- ]room|staff|company|snf[- ]certified)\s+(?:accommodation|housing|apartment|living space)\b/i,
-        /\b(?:snf|snf-norm|norma snf)\b/i,
-        /\b(?:huisvesting|woonruimte|onderdak)\s+(?:beschikbaar|geregeld|inbegrepen|voorzien)\b/i,
-        /\b(?:unterkunft)\s+(?:gestellt|inklusive|bereitgestellt)\b/i,
-        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i
+        /\b(?:snf|snf-norm|norma snf|snf-gecertificeerd)\b/i,
+        /\bcompany\s+(?:apartment|flat|room)\s+(?:available|provided|included)\b/i,
+        /\b(?:room\s+and\s+board|board\s+and\s+lodging)\b/i,
+        /\blive[- ]in\s+(?:position|job|carer|caregiver|nurse|role|housekeeper)\b/i,
+        // Dutch
+        /\b(?:huisvesting|woonruimte|onderdak)\s+(?:beschikbaar|geregeld|inbegrepen|voorzien|verzorgd)\b/i,
+        /\b(?:wij regelen|bieden)\s+(?:huisvesting|woonruimte)\b/i,
+        // German
+        /\b(?:unterkunft)\s+(?:gestellt|inklusive|bereitgestellt|vorhanden|wird gestellt)\b/i,
+        /\b(?:unterkunft|wohnung)\s+(?:wird|kann)\s+(?:bereitgestellt|gestellt)\b/i,
+        // Romanian
+        /\b(?:cazare|cazarea)\s+(?:asigurată|asigurata|gratuită|gratuita|inclusă|inclusa|oferită|oferita)\b/i,
+        /\b(?:oferim|asigurăm|asiguram)\s+cazare\b/i,
+        // French
+        /\b(?:logement|hébergement|hebergement)\s+(?:fourni|assuré|assure|inclus|pris en charge|mis à disposition)\b/i,
+        /\b(?:logé|loge)\s+et\s+nourri\b/i
     ];
 
-    for (const rx of tier1HousingPatterns) {
-        if (rx.test(text)) return { hasAccommodation: true, type: 'housing' };
+    for (const rx of directHousingPatterns) {
+        if (rx.test(cleanText)) return { hasAccommodation: true, type: 'DIRECT_HOUSING' };
     }
 
-    // 3. TIER 2: RELOCATION SUPPORT & HOUSING ALLOWANCES (Financial / Concierge Relocation Package)
-    const tier2RelocationPatterns = [
-        /\brelocation\s+(?:package|support|assistance|allowance|bonus|budget|service)\b/i,
-        /\bhousing\s+(?:support|allowance|assistance|subsidy)\b/i,
-        /\b(?:help|assistance|support)\s+with\s+(?:finding\s+|arranging\s+)?(?:accommodation|housing|a place to live|a flat|an apartment|wohnungssuche)\b/i,
-        /\btemporary\s+(?:housing|accommodation|apartment|living)\b/i,
-        /\bhelp\s+with\s+relocation\s+(?:including|and)\s+(?:accommodation|housing)\b/i
+    // 3. DEAL 2: HOUSING & RELOCATION SUPPORT (Help finding housing, registration, lease agreements, temporary housing)
+    const supportHousingPatterns = [
+        /(?:assist|help|support)[^.\n\r]{0,60}?(?:finding|find|search|securing|with)[^.\n\r]{0,60}?(?:accommodation|housing|apartment|flat)/i,
+        /\bactive support for finding accommodation\b/i,
+        /\bsupport with finding accommodation\b/i,
+        /\bhelp with housing\b/i,
+        /\bassistance with (?:finding )?temporary accommodations\b/i,
+        /\btemporary accommodation (?:provided|available|offered|arranged)\b/i,
+        /\bhelp[^.\n\r]{0,60}?handle authorities[^.\n\r]{0,60}?find accommodation\b/i,
+        /\bhousing support\b/i,
+        /\bassistance with local housing\b/i,
+        /\bassistance with lease agreements\b/i
     ];
 
-    for (const rx of tier2RelocationPatterns) {
-        if (rx.test(text)) return { hasAccommodation: true, type: 'relocation' };
+    for (const rx of supportHousingPatterns) {
+        if (rx.test(cleanText)) return { hasAccommodation: true, type: 'HOUSING_SUPPORT' };
     }
 
     return { hasAccommodation: false, type: null };
@@ -495,47 +521,75 @@ function extractLocationDetails(job, countryObj) {
         }
     }
 
+    if (countryObj.key === 'DK') {
+        const cities = ['København', 'Copenhagen', 'Aarhus', 'Odense', 'Aalborg', 'Esbjerg', 'Randers', 'Kolding', 'Horsens', 'Vejle', 'Roskilde', 'Herning', 'Silkeborg'];
+        for (const city of cities) {
+            const rx = new RegExp(`\\b${city}\\b`, 'i');
+            if (rx.test(text)) return `${city}, ${countryObj.name}`;
+        }
+    }
+
+    if (countryObj.key === 'FR') {
+        const cities = ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille', 'Rennes', 'Reims', 'Toulon', 'Grenoble', 'Dijon'];
+        for (const city of cities) {
+            const rx = new RegExp(`\\b${city}\\b`, 'i');
+            if (rx.test(text)) return `${city}, ${countryObj.name}`;
+        }
+    }
+
+    if (countryObj.key === 'NO') {
+        const cities = ['Oslo', 'Bergen', 'Trondheim', 'Stavanger', 'Bærum', 'Kristiansand', 'Drammen', 'Asker', 'Lillestrøm', 'Fredrikstad', 'Tromsø', 'Sandnes', 'Ålesund', 'Haugesund', 'Bodø', 'Arendal', 'Larvik', 'Kongsberg', 'Molde'];
+        for (const city of cities) {
+            const rx = new RegExp(`\\b${city}\\b`, 'i');
+            if (rx.test(text)) return `${city}, ${countryObj.name}`;
+        }
+    }
+
+    if (countryObj.key === 'SE') {
+        const cities = ['Stockholm', 'Göteborg', 'Gothenburg', 'Malmö', 'Uppsala', 'Västerås', 'Örebro', 'Linköping', 'Helsingborg', 'Jönköping', 'Norrköping', 'Lund', 'Umeå', 'Gävle', 'Borås', 'Södertälje', 'Eskilstuna', 'Halmstad', 'Växjö', 'Karlstad'];
+        for (const city of cities) {
+            const rx = new RegExp(`\\b${city}\\b`, 'i');
+            if (rx.test(text)) return `${city}, ${countryObj.name}`;
+        }
+    }
+
     return `${countryObj.name}`;
 }
 
 function isStrictlyEnglish(title, description) {
     const text = `${title || ''} ${description || ''}`.toLowerCase();
     
-    // Disqualifying German phrases
-    const germanDisqualifiers = [
-        /\b(wir suchen|ihre aufgaben|ihr profil|unser angebot|über uns|bewerbung|bewerben|anschreiben|lebenslauf|arbeitsort|vollzeit|teilzeit|vergütung|urlaubstage|arbeitgeber|arbeitsvertrag|abgeschlossene ausbildung|fachkraft|helfer|krankenpfleger|altenpfleger|vorstellungsgespräch|anforderungen|voraussetzungen|deutschkenntnisse|eingruppierung|entgeltgruppe|zeitarbeit|vermittlungsgutschein|direktvermittlung|festanstellung|schwerbehinderte|stellenbeschreibung|mitarbeiter|kollegen|berufserfahrung|tätigkeit|unternehmen|kunden|einsatzort|einsatzbereich|dienstplan|schichtdienst|nachtdienst)\b/gi
+    // Disqualifying German headings (Notice: removed metadata tokens like vollzeit, arbeitsort, fachkraft, helfer, unternehmen)
+    const pureGermanHeadings = [
+        /\b(wir suchen\b|ihre aufgaben\b|ihr profil\b|unser angebot\b|über uns\b|bewerbung einreichen|bewerben sie sich|lebenslauf und anschreiben|vorstellungsgespräch\b|anforderungsprofil\b|stellenbeschreibung\b|arbeitsvertrag\b|abgeschlossene ausbildung\b)/gi
     ];
     
-    // Disqualifying Dutch phrases
-    const dutchDisqualifiers = [
-        /\b(wij zoeken|wat ga je doen|wat breng je mee|wat bieden wij|over ons|solliciteer|sollicitatie|cv en motivatie|werklocatie|fulltime|parttime|salarisindicatie|vakantiedagen|werkgever|arbeidsovereenkomst|opleiding|ervaring|vaardigheden|dienstverband|ploegendienst|functie-eisen|takenpakket|verantwoordelijkheden|enthousiast|reiskostenvergoeding|wij zijn|jouw profiel|ons aanbod)\b/gi
+    // Disqualifying Dutch headings
+    const pureDutchHeadings = [
+        /\b(wij zoeken\b|wat ga je doen\b|wat breng je mee\b|wat bieden wij\b|over ons\b|solliciteer direct|cv en motivatie|arbeidsovereenkomst\b|functie-eisen\b|takenpakket\b|reiskostenvergoeding\b)/gi
     ];
 
-    // Disqualifying French phrases
-    const frenchDisqualifiers = [
-        /\b(nous recherchons|vos missions|votre profil|ce que nous offrons|à propos de nous|postuler|candidature|lettre de motivation|lieu de travail|temps plein|temps partiel|rémunération|congés payés|employeur|contrat de travail|formation|expérience requise|compétences|débutant accepté|télétravail|notre offre)\b/gi
+    // Disqualifying French headings
+    const pureFrenchHeadings = [
+        /\b(nous recherchons\b|vos missions\b|votre profil\b|ce que nous offrons\b|à propos de nous\b|lettre de motivation|contrat de travail\b|expérience requise\b)/gi
     ];
 
     let germanHits = 0;
-    for (const rx of germanDisqualifiers) {
+    for (const rx of pureGermanHeadings) {
         const matches = text.match(rx);
         if (matches) germanHits += matches.length;
     }
 
     let dutchHits = 0;
-    for (const rx of dutchDisqualifiers) {
+    for (const rx of pureDutchHeadings) {
         const matches = text.match(rx);
         if (matches) dutchHits += matches.length;
     }
 
     let frenchHits = 0;
-    for (const rx of frenchDisqualifiers) {
+    for (const rx of pureFrenchHeadings) {
         const matches = text.match(rx);
         if (matches) frenchHits += matches.length;
-    }
-
-    if (germanHits >= 2 || dutchHits >= 2 || frenchHits >= 2) {
-        return false;
     }
 
     // Reject tourist/ticket/booking ads that slip in as fake vacancies
@@ -543,7 +597,7 @@ function isStrictlyEnglish(title, description) {
         return false;
     }
 
-    const englishMatches = text.match(/\b(the|and|you|your|will|our|with|for|are|this|from|have|work|team|experience|requirements|offer|apply|skills|responsible|responsibilities|position|company|salary|benefits|hours|please|looking|working|candidate|candidates|opportunity|role)\b/gi) || [];
+    const englishMatches = text.match(/\b(the|and|you|your|will|our|with|for|are|this|from|have|work|team|experience|requirements|offer|apply|skills|responsible|responsibilities|position|company|salary|benefits|hours|please|looking|working|candidate|candidates|opportunity|role|we|job|required)\b/gi) || [];
     const generalGerman = text.match(/\b(und|der|die|das|wir|sie|für|mit|den|von|zu|auf|sich|ein|eine|einer|eines|werden|sind|oder|bei|ihre|nach|aus|über|dich|dein|deine|uns)\b/gi) || [];
     const generalDutch = text.match(/\b(en|van|het|een|voor|met|zijn|niet|naar|als|ook|uit|bij|zoek|ons|werken|ervaring|wij|jouw|bent|hebt)\b/gi) || [];
     const generalFrench = text.match(/\b(et|de|la|le|les|un|une|des|du|en|pour|dans|sur|avec|par|nous|vous|est|sont)\b/gi) || [];
@@ -551,7 +605,19 @@ function isStrictlyEnglish(title, description) {
     const engCount = englishMatches.length;
     const nonEngCount = generalGerman.length + generalDutch.length + generalFrench.length;
 
-    return engCount >= 8 && engCount > (nonEngCount * 2);
+    // RULE 1: If text has strong English body or English structural headers, accept even if mixed with German
+    const hasEnglishStructure = engCount >= 20 || /we offer|requirements|responsibilities|looking for|candidate|apply now|about the role|job description/i.test(text);
+    if (hasEnglishStructure && engCount >= 10 && engCount >= (nonEngCount * 0.35)) {
+        return true;
+    }
+
+    // RULE 2: If purely foreign headings and no English structure, reject
+    if (germanHits >= 2 || dutchHits >= 2 || frenchHits >= 2) {
+        return false;
+    }
+
+    // RULE 3: Default threshold for standard listings
+    return engCount >= 8 && engCount > nonEngCount;
 }
 
 const AGENCY_REGISTRY = [
@@ -708,7 +774,7 @@ async function fetchWidkJobs() {
                 const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
                 const resolvedDomain = resolveEuDomain([], cleanTitle);
                 const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
-                const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
+                const { salaryMin, salaryType } = extractEuroSalary(cleanDesc, 'DK');
 
                 const locParts = [];
                 if (raw.postalDistrictName) locParts.push(raw.postalDistrictName);
@@ -759,6 +825,263 @@ async function fetchWidkJobs() {
     return widkJobs;
 }
 
+function mapSwedenOccupationToDomain(hit, title) {
+    const isco = hit.occupation?.legacy_ams_taxonomy_id || hit.occupation_group?.legacy_ams_taxonomy_id;
+    if (isco) {
+        const d = mapIscoToDomain(isco);
+        if (d) return d;
+    }
+    const field = (hit.occupation_field?.label || '').toLowerCase();
+    if (field.includes('bygg') || field.includes('anläggning')) return 'Construcții';
+    if (field.includes('industri') || field.includes('tillverkning')) return 'Producție';
+    if (field.includes('hotell') || field.includes('restaurang') || field.includes('storhushåll')) return 'HoReCa';
+    if (field.includes('transport') || field.includes('gods') || field.includes('distribution')) return 'Transporturi';
+    if (field.includes('hälso') || field.includes('sjukvård') || field.includes('kroppsvård')) return 'Domeniul Medical';
+    if (field.includes('data') || field.includes('it')) return 'IT';
+    if (field.includes('teknik') || field.includes('ingenjör')) return 'Inginerie';
+    if (field.includes('försäljning') || field.includes('inköp') || field.includes('marknadsföring')) return 'Comerț';
+    if (field.includes('ekonomi') || field.includes('finans')) return 'Financiar-Contabil';
+    if (field.includes('administration') || field.includes('kontor') || field.includes('kundtjänst')) return 'Administrativ';
+    if (field.includes('lantbruk') || field.includes('skogsbruk') || field.includes('fiske') || field.includes('djurvård')) return 'Agricultură';
+    if (field.includes('pedagogik') || field.includes('utbildning')) return 'Educație';
+    if (field.includes('säkerhet') || field.includes('bevakning')) return 'Pază și Protecție';
+    if (field.includes('sanering') || field.includes('rengöring') || field.includes('servicearbeten')) return 'Servicii';
+
+    return resolveEuDomain([], title);
+}
+
+async function fetchSwedenJobTechJobs() {
+    console.log(`\n🇸🇪 [JobTech Dev] Inițiere descărcare directă din Suedia API (Arbetsförmedlingen)...`);
+    const swedenJobs = [];
+    const seenJobTechIds = new Set();
+    const JOBTECH_URL = 'https://jobsearch.api.jobtechdev.se/search';
+    const PAGE_LIMIT = 100;
+    let offset = 0;
+    const MAX_PAGES = 30; // up to 3,000 jobs
+    let page = 1;
+
+    while (page <= MAX_PAGES) {
+        const params = new URLSearchParams({
+            q: 'english',
+            offset: String(offset),
+            limit: String(PAGE_LIMIT)
+        });
+
+        try {
+            const res = await fetch(`${JOBTECH_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                console.warn(`  ⚠️ JobTech Page ${page} response: ${res.status}`);
+                break;
+            }
+
+            const data = await res.json();
+            const hits = data.hits || [];
+            if (hits.length === 0) break;
+
+            for (const hit of hits) {
+                if (!hit || !hit.id) continue;
+                if (seenJobTechIds.has(hit.id)) continue;
+                seenJobTechIds.add(hit.id);
+
+                const cleanTitle = (hit.headline || hit.occupation?.label || '').trim();
+                const cleanDesc = cleanHtmlDescription(hit.description?.text || '');
+                if (!cleanTitle || cleanTitle.length < 4) continue;
+
+                const rawEmployerName = hit.employer?.name ? hit.employer.name.trim() : '';
+                const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
+                const resolvedDomain = mapSwedenOccupationToDomain(hit, cleanTitle);
+                const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
+                const { salaryMin, salaryType } = extractEuroSalary(cleanDesc, 'SE');
+
+                const city = hit.workplace_address?.city || hit.workplace_address?.municipality;
+                const locationStr = city ? `${city}, Suedia` : 'Suedia';
+
+                const officialUrl = hit.application_details?.url || hit.webpage_url || `https://arbetsformedlingen.se/platsbanken/annonser/${hit.id}`;
+
+                swedenJobs.push({
+                    id: `se-${hit.id}`,
+                    rawId: hit.id,
+                    created_at: hit.publication_date ? new Date(hit.publication_date).toISOString() : new Date().toISOString(),
+                    occupation: cleanTitle,
+                    employer_name: employerName,
+                    job_domain_name: resolvedDomain,
+                    jobCategoriesCodes: [],
+                    isco: hit.occupation?.legacy_ams_taxonomy_id || null,
+                    address_locality_name: locationStr,
+                    description: cleanDesc,
+                    minimum_salary: salaryMin,
+                    salary_type: salaryType,
+                    has_accommodation: accInfo.hasAccommodation,
+                    accommodation_type: accInfo.type,
+                    job_expiry_date: hit.application_deadline ? new Date(hit.application_deadline).toISOString().split('T')[0] : null,
+                    open_positions: hit.number_of_vacancies || 1,
+                    source_aggregator: 'JobTech Dev',
+                    is_premium: false,
+                    official_url: officialUrl,
+                    work_type_name: hit.working_hours_type?.label === 'Deltid' ? 'Part-Time' : 'Full-Time',
+                    work_type_details: hit.working_hours_type?.label === 'Deltid' ? 'Normă parțială (Part-Time)' : 'Normă întreagă (Full-Time)',
+                    professional_experience_name: cleanDesc.toLowerCase().includes('junior') || cleanDesc.toLowerCase().includes('starter') ? 'Fără experiență / Începător' : (cleanDesc.toLowerCase().includes('senior') || cleanDesc.toLowerCase().includes('experienced') ? 'Peste 3 ani experiență' : '1 - 3 ani experiență')
+                });
+            }
+
+            const totalCount = data.total?.value || 0;
+            if (swedenJobs.length >= totalCount || hits.length < PAGE_LIMIT) break;
+
+            offset += hits.length;
+            page++;
+            await new Promise(r => setTimeout(r, 200));
+        } catch (err) {
+            console.error(`  ❌ JobTech Page ${page} error:`, err.message);
+            break;
+        }
+    }
+
+    console.log(`  ✓ [JobTech Dev] Total descărcat și mapat din Suedia: ${swedenJobs.length} joburi.`);
+    return swedenJobs;
+}
+
+function mapNorwayOccupationToDomain(occList, title) {
+    if (Array.isArray(occList) && occList.length > 0) {
+        const l1 = (occList[0].level1 || '').toLowerCase();
+        const l2 = (occList[0].level2 || '').toLowerCase();
+        if (l1.includes('bygg') || l1.includes('anlegg')) return 'Construcții';
+        if (l1.includes('industri') || l1.includes('produksjon')) return 'Producție';
+        if (l1.includes('reiseliv') || l1.includes('mat') || l1.includes('servering')) return 'HoReCa';
+        if (l1.includes('transport') && !l1.includes('lager')) return 'Transporturi';
+        if (l1.includes('lager') || l2.includes('lager')) return 'Producție';
+        if (l1.includes('helse') || l1.includes('sosial')) return 'Domeniul Medical';
+        if (l1.includes('it') || l2.includes('it') || l2.includes('utvikling')) return 'IT';
+        if (l1.includes('ingeniør') || l1.includes('teknikk')) return 'Inginerie';
+        if (l1.includes('salg') || l1.includes('varehandel')) return 'Comerț';
+        if (l1.includes('økonomi') || l1.includes('regnskap')) return 'Financiar-Contabil';
+        if (l1.includes('kontor') || l1.includes('administrasjon')) return 'Administrativ';
+        if (l1.includes('jordbruk') || l1.includes('skogbruk') || l1.includes('fiske')) return 'Agricultură';
+        if (l1.includes('utdanning') || l1.includes('undervisning') || l1.includes('forskning')) return 'Educație';
+        if (l1.includes('sikkerhet')) return 'Pază și Protecție';
+        if (l1.includes('renhold') || l1.includes('service')) return 'Servicii';
+    }
+    return resolveEuDomain([], title);
+}
+
+async function fetchNorwayArbeidsplassenJobs() {
+    console.log(`\n🇳🇴 [NAV] Inițiere descărcare directă din Norvegia API (Arbeidsplassen)...`);
+    const norwayJobs = [];
+    const seenNavIds = new Set();
+    const NAV_URL = 'https://arbeidsplassen.nav.no/stillinger/api/search';
+    const PAGE_SIZE = 50;
+    let from = 0;
+    const MAX_PAGES = 50; // up to 2,500 jobs
+    let page = 1;
+
+    while (page <= MAX_PAGES) {
+        const params = new URLSearchParams({
+            workLanguage: 'Engelsk',
+            from: String(from),
+            size: String(PAGE_SIZE),
+            sort: 'published:desc'
+        });
+
+        try {
+            const res = await fetch(`${NAV_URL}?${params.toString()}`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                console.warn(`  ⚠️ NAV Page ${page} response: ${res.status}`);
+                break;
+            }
+
+            const data = await res.json();
+            const hits = data.hits?.hits || [];
+            if (hits.length === 0) break;
+
+            for (const hitObj of hits) {
+                const raw = hitObj._source || hitObj;
+                if (!raw || !raw.uuid) continue;
+                if (seenNavIds.has(raw.uuid)) continue;
+                seenNavIds.add(raw.uuid);
+
+                const cleanTitle = (raw.title || '').trim();
+                if (!cleanTitle || cleanTitle.length < 4) continue;
+
+                let descParts = [];
+                if (raw.properties?.adtext) {
+                    descParts.push(cleanHtmlDescription(raw.properties.adtext));
+                } else {
+                    if (raw.title) descParts.push(raw.title);
+                    if (raw.properties?.jobtitle && raw.properties.jobtitle !== raw.title) descParts.push(raw.properties.jobtitle);
+                    const l1 = raw.occupationList?.[0]?.level1;
+                    const l2 = raw.occupationList?.[0]?.level2;
+                    if (l1) descParts.push(`Domeniu: ${l1}${l2 ? ' - ' + l2 : ''}`);
+                    if (raw.properties?.searchtagsai) descParts.push(raw.properties.searchtagsai);
+                    if (raw.properties?.education) descParts.push(`Educație: ${raw.properties.education}`);
+                    if (raw.properties?.experience) descParts.push(`Experiență: ${raw.properties.experience}`);
+                }
+                const cleanDesc = descParts.join('\n\n').trim();
+
+                const rawEmployerName = raw.businessName || raw.employer?.name || '';
+                const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
+                const resolvedDomain = mapNorwayOccupationToDomain(raw.occupationList, cleanTitle);
+                const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
+                const { salaryMin, salaryType } = extractEuroSalary(cleanDesc, 'NO');
+
+                const loc = raw.locationList?.[0];
+                const city = loc?.city || loc?.municipal || loc?.county;
+                const locationStr = city ? `${city}, Norvegia` : 'Norvegia';
+
+                const officialUrl = `https://arbeidsplassen.nav.no/stillinger/stilling/${raw.uuid}`;
+
+                norwayJobs.push({
+                    id: `no-${raw.uuid}`,
+                    rawId: raw.uuid,
+                    created_at: raw.published ? new Date(raw.published).toISOString() : new Date().toISOString(),
+                    occupation: cleanTitle,
+                    employer_name: employerName,
+                    job_domain_name: resolvedDomain,
+                    jobCategoriesCodes: [],
+                    isco: null,
+                    address_locality_name: locationStr,
+                    description: cleanDesc,
+                    minimum_salary: salaryMin,
+                    salary_type: salaryType,
+                    has_accommodation: accInfo.hasAccommodation,
+                    accommodation_type: accInfo.type,
+                    job_expiry_date: raw.expires ? new Date(raw.expires).toISOString().split('T')[0] : null,
+                    open_positions: 1,
+                    source_aggregator: 'Arbeidsplassen NAV',
+                    is_premium: false,
+                    official_url: officialUrl,
+                    work_type_name: raw.properties?.extent === 'Deltid' ? 'Part-Time' : 'Full-Time',
+                    work_type_details: raw.properties?.extent === 'Deltid' ? 'Normă parțială (Part-Time)' : 'Normă întreagă (Full-Time)',
+                    professional_experience_name: cleanDesc.toLowerCase().includes('junior') || cleanDesc.toLowerCase().includes('starter') ? 'Fără experiență / Începător' : (cleanDesc.toLowerCase().includes('senior') || cleanDesc.toLowerCase().includes('experienced') ? 'Peste 3 ani experiență' : '1 - 3 ani experiență')
+                });
+            }
+
+            const totalCount = data.hits?.total?.value || 0;
+            if (norwayJobs.length >= totalCount || hits.length < PAGE_SIZE) break;
+
+            from += hits.length;
+            page++;
+            await new Promise(r => setTimeout(r, 200));
+        } catch (err) {
+            console.error(`  ❌ NAV Page ${page} error:`, err.message);
+            break;
+        }
+    }
+
+    console.log(`  ✓ [NAV] Total descărcat și mapat din Norvegia: ${norwayJobs.length} joburi.`);
+    return norwayJobs;
+}
+
 async function fetchJobsForCountry(countryObj) {
     console.log(`\n⏳ Fetching 100% of English jobs for ${countryObj.name} (${countryObj.key})...`);
     const allCountryJobs = [];
@@ -776,6 +1099,28 @@ async function fetchJobsForCountry(countryObj) {
             seenSignatures.add(getJobSignature(job.occupation, job.employer_name));
         });
         console.log(`  🔗 [Smart Merge] Încărcat ${widkJobs.length} joburi din Workindenmark ca bază primară.`);
+    }
+
+    // Smart Merge for Sweden: Load JobTech Dev (Arbetsförmedlingen) official dataset
+    if (countryObj.key === 'SE') {
+        const swedenJobs = await fetchSwedenJobTechJobs();
+        swedenJobs.forEach(job => {
+            allCountryJobs.push(job);
+            seenJobIds.add(job.id);
+            seenSignatures.add(getJobSignature(job.occupation, job.employer_name));
+        });
+        console.log(`  🔗 [Smart Merge] Încărcat ${swedenJobs.length} joburi din JobTech Dev (Suedia) ca bază primară.`);
+    }
+
+    // Smart Merge for Norway: Load Arbeidsplassen (NAV) official dataset
+    if (countryObj.key === 'NO') {
+        const norwayJobs = await fetchNorwayArbeidsplassenJobs();
+        norwayJobs.forEach(job => {
+            allCountryJobs.push(job);
+            seenJobIds.add(job.id);
+            seenSignatures.add(getJobSignature(job.occupation, job.employer_name));
+        });
+        console.log(`  🔗 [Smart Merge] Încărcat ${norwayJobs.length} joburi din Arbeidsplassen (Norvegia) ca bază primară.`);
     }
 
     // Helper: Fetch a single page from EURES for a set of location codes
@@ -838,18 +1183,18 @@ async function fetchJobsForCountry(countryObj) {
             const rawEmployerName = job.employer?.name ? job.employer.name.trim() : '';
             const employerName = identifyEuAgency(rawEmployerName, cleanTitle, cleanDesc);
 
-            // Smart Merge deduplication for Denmark: skip if title + employer already imported from WIDK
-            if (countryObj.key === 'DK') {
+            // Smart Merge deduplication for Denmark, Sweden, Norway: skip if title + employer already imported
+            if (countryObj.key === 'DK' || countryObj.key === 'SE' || countryObj.key === 'NO') {
                 const sig = getJobSignature(cleanTitle, employerName);
                 if (seenSignatures.has(sig)) {
-                    return; // Skip duplicate, prioritize richer WIDK entry
+                    return; // Skip duplicate, prioritize richer native entry
                 }
                 seenSignatures.add(sig);
             }
 
             seenJobIds.add(uniqueId);
             const locationStr = extractLocationDetails(job, countryObj);
-            const { salaryMin, salaryType } = extractEuroSalary(cleanDesc);
+            const { salaryMin, salaryType } = extractEuroSalary(cleanDesc, countryObj.key);
             const iscoCode = extractIscoFromCategories(job.jobCategoriesCodes);
             const resolvedDomain = resolveEuDomain(job.jobCategoriesCodes, cleanTitle);
             const accInfo = detectAccommodationOffer(cleanDesc, cleanTitle);
@@ -1023,137 +1368,6 @@ function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
     });
 }
 
-// ==========================================
-// ⚡ FLAT TUPLE ENCODER / DECODER
-// ==========================================
-
-function encodeEventsToFlatTuples(events) {
-    const typeSet = new Set(['JOB_ADDED', 'JOB_FILLED_OR_CLOSED', 'JOB_EXPIRED', 'POSITIONS_DECREASED', 'POSITIONS_INCREASED']);
-    const countrySet = new Set(['NL', 'DE', 'BE', 'AT', 'DK', 'FR', 'OTHER']);
-    const domainSet = new Set();
-    const employerSet = new Set();
-    const occupationSet = new Set();
-    const salarySet = new Set(['Nespecificat']);
-
-    events.forEach(e => {
-        if (e.event_type) typeSet.add(e.event_type);
-        if (e.domain) domainSet.add(e.domain);
-        if (e.employer_name) employerSet.add(e.employer_name);
-        if (e.occupation) occupationSet.add(e.occupation);
-        if (e.salary) salarySet.add(e.salary);
-    });
-
-    const types = Array.from(typeSet);
-    const countries = Array.from(countrySet);
-    const domains = Array.from(domainSet);
-    const employers = Array.from(employerSet);
-    const occupations = Array.from(occupationSet);
-    const salaries = Array.from(salarySet);
-
-    const typeMap = new Map(types.map((v, i) => [v, i]));
-    const countryMap = new Map(countries.map((v, i) => [v, i]));
-    const domainMap = new Map(domains.map((v, i) => [v, i]));
-    const employerMap = new Map(employers.map((v, i) => [v, i]));
-    const occupationMap = new Map(occupations.map((v, i) => [v, i]));
-    const salaryMap = new Map(salaries.map((v, i) => [v, i]));
-
-    const helperCountry = (loc) => {
-        const u = (loc || '').toUpperCase();
-        if (u.includes('OLANDA') || u.includes('NETHERLANDS')) return 'NL';
-        if (u.includes('GERMANIA') || u.includes('GERMANY')) return 'DE';
-        if (u.includes('BELGIA') || u.includes('BELGIUM')) return 'BE';
-        if (u.includes('AUSTRIA')) return 'AT';
-        if (u.includes('DANEMARCA') || u.includes('DENMARK')) return 'DK';
-        if (u.includes('FRANȚA') || u.includes('FRANCE') || u.includes('FRANTA')) return 'FR';
-        return 'OTHER';
-    };
-
-    const flatTuples = events.map(e => {
-        const ts = e.created_at ? Math.floor(new Date(e.created_at).getTime() / 1000) : Math.floor(Date.now() / 1000);
-        const tIdx = typeMap.has(e.event_type) ? typeMap.get(e.event_type) : 0;
-        const cCode = helperCountry(e.location);
-        const cIdx = countryMap.has(cCode) ? countryMap.get(cCode) : 6;
-        const dIdx = domainMap.has(e.domain) ? domainMap.get(e.domain) : -1;
-        const empIdx = employerMap.has(e.employer_name) ? employerMap.get(e.employer_name) : -1;
-        const occIdx = occupationMap.has(e.occupation) ? occupationMap.get(e.occupation) : -1;
-        const delta = e.delta_positions || 1;
-        const salIdx = salaryMap.has(e.salary) ? salaryMap.get(e.salary) : 0;
-        const housing = e.has_accommodation ? 1 : 0;
-        const isAgency = e.is_agency ? 1 : 0;
-        const id = e.id || '';
-
-        return [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id];
-    });
-
-    return {
-        version: 1,
-        updated_at: new Date().toISOString(),
-        total_events: flatTuples.length,
-        dict: {
-            types,
-            countries,
-            domains,
-            employers,
-            occupations,
-            salaries
-        },
-        events: flatTuples
-    };
-}
-
-function decodeFlatTuplesToEvents(flatObj) {
-    if (!flatObj || !flatObj.dict || !Array.isArray(flatObj.events)) return [];
-    const { types, countries, domains, employers, occupations, salaries } = flatObj.dict;
-
-    const countryLabels = {
-        'NL': 'Olanda',
-        'DE': 'Germania',
-        'BE': 'Belgia',
-        'AT': 'Austria',
-        'DK': 'Danemarca',
-        'FR': 'Franța',
-        'OTHER': 'UE'
-    };
-
-    return flatObj.events.map(t => {
-        const [ts, tIdx, cIdx, dIdx, empIdx, occIdx, delta, salIdx, housing, isAgency, id] = t;
-        const cCode = countries[cIdx] || 'OTHER';
-        return {
-            id: id || `eures-${ts}`,
-            created_at: new Date(ts * 1000).toISOString(),
-            event_type: types[tIdx] || 'JOB_ADDED',
-            country_code: cCode,
-            location: countryLabels[cCode] || cCode,
-            domain: dIdx >= 0 ? (domains[dIdx] || 'Altele') : 'Altele',
-            employer_name: empIdx >= 0 ? (employers[empIdx] || 'Angajator Direct UE') : 'Angajator Direct UE',
-            occupation: occIdx >= 0 ? (occupations[occIdx] || 'Ofertă') : 'Ofertă',
-            delta_positions: delta,
-            salary: salIdx >= 0 ? (salaries[salIdx] || 'Nespecificat') : 'Nespecificat',
-            has_accommodation: housing === 1,
-            is_agency: isAgency === 1
-        };
-    });
-}
-
-async function fetchFromPrivateRepo(pat, targetRepo, filePathInRepo) {
-    if (!pat || !targetRepo || !targetRepo.includes('/')) return null;
-    const [owner, repo] = targetRepo.split('/');
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePathInRepo}`;
-    const headers = {
-        'Authorization': `Bearer ${pat}`,
-        'Accept': 'application/vnd.github.v3.raw',
-        'User-Agent': 'Eures-Private-Sync-Bot'
-    };
-    try {
-        const res = await fetch(url, { headers });
-        if (res.ok) {
-            const data = await res.json();
-            return data;
-        }
-    } catch (_) {}
-    return null;
-}
-
 async function pushToPrivateRepo(pat, targetRepo, filePathInRepo, contentObj, commitMessage) {
     if (!pat || !targetRepo || !targetRepo.includes('/')) return false;
     const [owner, repo] = targetRepo.split('/');
@@ -1277,8 +1491,7 @@ async function runSync() {
         const key = j.id || `eures-${j.rawEuresId}`;
         if (!newJobMap.has(key)) {
             filledCount++;
-            const jobFirstSeen = j.created_at ? new Date(j.created_at) : (j.job_expiry_date ? new Date(new Date(j.job_expiry_date).getTime() - (30 * 86400000)) : now);
-            const daysActive = Math.max(1, Math.floor((now - jobFirstSeen) / 86400000));
+            const daysActive = j.job_expiry_date ? Math.max(1, Math.min(30, Math.floor((now - new Date(j.job_expiry_date)) / 86400000) + 30)) : 14;
 
             newEvents.push({
                 id: j.id,
@@ -1303,53 +1516,17 @@ async function runSync() {
     let existingEvents = [];
     let existingHistory = [];
 
-    const privatePat = process.env.PRIVATE_REPO_PAT;
-    const privateTarget = process.env.PRIVATE_REPO_TARGET;
-
-    // A. Fetch existing history from Private Repo first (since private files are gitignored locally)
-    if (privatePat && privateTarget) {
-        console.log(`📥 Fetching existing rolling history from private vault (${privateTarget})...`);
-        const [vaultFlatEvents, vaultLegacyEvents, vaultHistory] = await Promise.all([
-            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json'),
-            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json'),
-            fetchFromPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json')
-        ]);
-        
-        if (vaultFlatEvents && vaultFlatEvents.dict && Array.isArray(vaultFlatEvents.events)) {
-            existingEvents = decodeFlatTuplesToEvents(vaultFlatEvents);
-            console.log(`  Decoded ${existingEvents.length} existing market events from Flat Tuple vault.`);
-        } else if (Array.isArray(vaultLegacyEvents) && vaultLegacyEvents.length > 0) {
-            existingEvents = vaultLegacyEvents;
-            console.log(`  Found ${existingEvents.length} existing market events in legacy vault.`);
-        }
-
-        if (Array.isArray(vaultHistory) && vaultHistory.length > 0) {
-            existingHistory = vaultHistory;
-            console.log(`  Found ${existingHistory.length} historical sync checkpoints in private vault.`);
-        }
-    }
-
-    // B. Fallback to local files if available
-    const flatEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events_flat.json') : null;
-    const legacyEventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
+    const eventsPath = primaryDir ? path.join(primaryDir, 'eu_market_events.json') : null;
     const historyPath = primaryDir ? path.join(primaryDir, 'eu_sync_history.json') : null;
 
-    if (existingEvents.length === 0 && flatEventsPath && fs.existsSync(flatEventsPath)) {
-        try {
-            const raw = JSON.parse(fs.readFileSync(flatEventsPath, 'utf8'));
-            existingEvents = decodeFlatTuplesToEvents(raw);
-        } catch (_) {}
+    if (eventsPath && fs.existsSync(eventsPath)) {
+        try { existingEvents = JSON.parse(fs.readFileSync(eventsPath, 'utf8')); } catch (_) {}
     }
-    if (existingEvents.length === 0 && legacyEventsPath && fs.existsSync(legacyEventsPath)) {
-        try { existingEvents = JSON.parse(fs.readFileSync(legacyEventsPath, 'utf8')); } catch (_) {}
-    }
-    if (existingHistory.length === 0 && historyPath && fs.existsSync(historyPath)) {
+    if (historyPath && fs.existsSync(historyPath)) {
         try { existingHistory = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) {}
     }
 
-    // Cumulative full events list without goldfish cap (stores 100% of events)
-    const cumulativeEvents = [...newEvents, ...existingEvents];
-    const flatPayload = encodeEventsToFlatTuples(cumulativeEvents);
+    const updatedEvents = [...newEvents, ...existingEvents].slice(0, 1500);
 
     const historyPoint = {
         date: now.toISOString().split('T')[0],
@@ -1361,31 +1538,33 @@ async function runSync() {
         avg_salary: 16.64,
         avg_velocity_days: 16.5
     };
-    const updatedHistory = [historyPoint, ...existingHistory];
+    const updatedHistory = [historyPoint, ...existingHistory].slice(0, 365);
 
     // Save locally
     DATA_DIRS.forEach(dir => {
         try {
-            fs.writeFileSync(path.join(dir, 'eu_market_events_flat.json'), JSON.stringify(flatPayload), 'utf8');
-            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(cumulativeEvents.slice(0, 500), null, 2), 'utf8');
+            fs.writeFileSync(path.join(dir, 'eu_market_events.json'), JSON.stringify(updatedEvents, null, 2), 'utf8');
             fs.writeFileSync(path.join(dir, 'eu_sync_history.json'), JSON.stringify(updatedHistory, null, 2), 'utf8');
         } catch (_) {}
     });
 
     // 4. Push to Private Repo if GitHub Secrets exist
+    const privatePat = process.env.PRIVATE_REPO_PAT;
+    const privateTarget = process.env.PRIVATE_REPO_TARGET;
+
     if (privatePat && privateTarget) {
-        console.log(`\n🔒 Pushing Flat Tuple intelligence to private repository (${privateTarget})...`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events_flat.json', flatPayload, `Sync EU Flat Events (${cumulativeEvents.length} events) - ${now.toISOString().split('T')[0]}`);
-        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History (${updatedHistory.length} checkpoints) - ${now.toISOString().split('T')[0]}`);
+        console.log(`\n🔒 Pushing intelligence to private repository (${privateTarget})...`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_market_events.json', updatedEvents, `Sync EU Market Events - ${now.toISOString().split('T')[0]}`);
+        await pushToPrivateRepo(privatePat, privateTarget, 'data/eu_sync_history.json', updatedHistory, `Sync EU History Checkpoint - ${now.toISOString().split('T')[0]}`);
     }
 
     // 5. Automatic jsDelivr Edge CDN Cache Purge (Ensures 0 delay for all global users)
     try {
         console.log('\n⚡ Purging jsDelivr Edge CDN cache for instant global update...');
         const cdnFiles = [
-            'jobs_all.json', 'jobs_de.json', 'jobs_nl.json', 'jobs_be.json', 'jobs_at.json', 'jobs_dk.json', 'jobs_fr.json',
-            'meta_all.json', 'meta_de.json', 'meta_nl.json', 'meta_be.json', 'meta_at.json', 'meta_dk.json', 'meta_fr.json',
-            'pages/all/1.json', 'pages/de/1.json', 'pages/nl/1.json', 'pages/be/1.json', 'pages/at/1.json', 'pages/dk/1.json', 'pages/fr/1.json'
+            'jobs_all.json', 'jobs_de.json', 'jobs_nl.json', 'jobs_be.json', 'jobs_at.json', 'jobs_dk.json', 'jobs_fr.json', 'jobs_no.json', 'jobs_se.json',
+            'meta_all.json', 'meta_de.json', 'meta_nl.json', 'meta_be.json', 'meta_at.json', 'meta_dk.json', 'meta_fr.json', 'meta_no.json', 'meta_se.json',
+            'pages/all/1.json', 'pages/de/1.json', 'pages/nl/1.json', 'pages/be/1.json', 'pages/at/1.json', 'pages/dk/1.json', 'pages/fr/1.json', 'pages/no/1.json', 'pages/se/1.json'
         ];
         await Promise.all(cdnFiles.map(f => fetch(`https://purge.jsdelivr.net/gh/zmd2508/euzmj262508@main/data/${f}`).catch(() => {})));
         console.log('✅ jsDelivr Edge CDN cache purged successfully.');
