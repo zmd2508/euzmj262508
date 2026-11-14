@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 // Standalone repo data directory (pushed to GitHub CDN)
 const DATA_DIRS = [
-    path.join(__dirname, '..', 'euzmj_scraper', 'data')
+    path.join(__dirname, 'data')
 ].filter(d => {
     try {
         if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
@@ -1360,6 +1360,47 @@ function saveShardedCountryFeed(jobs, countryCode, countryName, countryKey) {
                 };
 
                 const pagePath = path.join(pagesDir, `${p}.json`);
+                fs.writeFileSync(pagePath, JSON.stringify(pagePayload), 'utf8');
+            }
+
+            // 2. Also generate housing sharded feeds (for /cu-cazare instant 0ms streaming)
+            const housingJobs = jobs.filter(j => j.has_accommodation);
+            const housingTotal = housingJobs.length;
+            const housingTotalPages = Math.ceil(housingTotal / PAGE_SIZE) || 1;
+
+            const metaHousingPayload = {
+                country: countryName,
+                countryCode: countryKey,
+                totalLiveMarketCount: housingTotal,
+                pageSize: PAGE_SIZE,
+                totalPages: housingTotalPages,
+                updatedAt: now
+            };
+
+            const metaHousingPath = path.join(dir, `meta_housing_${countryCode.toLowerCase()}.json`);
+            fs.writeFileSync(metaHousingPath, JSON.stringify(metaHousingPayload, null, 2), 'utf8');
+
+            const pagesHousingDir = path.join(dir, 'pages_housing', countryCode.toLowerCase());
+            if (!fs.existsSync(pagesHousingDir)) {
+                fs.mkdirSync(pagesHousingDir, { recursive: true });
+            }
+
+            for (let p = 1; p <= housingTotalPages; p++) {
+                const start = (p - 1) * PAGE_SIZE;
+                const end = start + PAGE_SIZE;
+                const pageJobs = housingJobs.slice(start, end);
+
+                const pagePayload = {
+                    country: countryName,
+                    countryCode: countryKey,
+                    page: p,
+                    pageSize: PAGE_SIZE,
+                    totalPages: housingTotalPages,
+                    totalLiveMarketCount: housingTotal,
+                    jobs: pageJobs
+                };
+
+                const pagePath = path.join(pagesHousingDir, `${p}.json`);
                 fs.writeFileSync(pagePath, JSON.stringify(pagePayload), 'utf8');
             }
         } catch (e) {
