@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-14T21:59:45.340Z",
-  "totalActiveJobsScanned": 8141,
-  "totalJobsMapped": 5317,
+  "updatedAt": "2026-11-15T09:15:22.508Z",
+  "totalActiveJobsScanned": 8093,
+  "totalJobsMapped": 5290,
   "byTrade": {
     "sofer": [
       "alba",
@@ -370,7 +370,6 @@
       "olt",
       "prahova",
       "salaj",
-      "satu-mare",
       "sibiu",
       "timis",
       "tulcea",
@@ -517,7 +516,6 @@
       "neamt",
       "prahova",
       "salaj",
-      "satu-mare",
       "sibiu",
       "timis",
       "tulcea",
@@ -1425,11 +1423,9 @@
       "lacatus",
       "manipulant",
       "mecanic",
-      "operator-cnc",
       "ospatar",
       "paznic",
       "sofer",
-      "sudor",
       "vanzator",
       "zidar"
     ],
