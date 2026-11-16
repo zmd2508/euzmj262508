@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-16T09:32:16.529Z",
-  "totalActiveJobsScanned": 7946,
-  "totalJobsMapped": 5212,
+  "updatedAt": "2026-11-16T23:24:52.649Z",
+  "totalActiveJobsScanned": 8286,
+  "totalJobsMapped": 5458,
   "byTrade": {
     "sofer": [
       "alba",
@@ -10,6 +10,7 @@
       "bacau",
       "bihor",
       "bistrita-nasaud",
+      "botosani",
       "braila",
       "brasov",
       "bucuresti",
@@ -395,6 +396,7 @@
       "galati",
       "giurgiu",
       "gorj",
+      "harghita",
       "hunedoara",
       "ialomita",
       "iasi",
@@ -608,7 +610,6 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
-      "braila",
       "brasov",
       "bucuresti",
       "buzau",
@@ -673,7 +674,6 @@
       "cluj",
       "constanta",
       "covasna",
-      "dolj",
       "galati",
       "harghita",
       "hunedoara",
@@ -762,6 +762,7 @@
       "iasi",
       "ilfov",
       "maramures",
+      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -915,6 +916,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "sofer",
       "stivuitorist",
       "sudor",
       "tamplar",
@@ -931,7 +933,6 @@
       "manipulant",
       "mecanic",
       "operator-cnc",
-      "ospatar",
       "paznic",
       "sofer",
       "sudor",
@@ -1111,7 +1112,6 @@
       "zidar"
     ],
     "dolj": [
-      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1205,7 +1205,8 @@
       "stivuitorist",
       "sudor",
       "tamplar",
-      "vanzator"
+      "vanzator",
+      "zidar"
     ],
     "hunedoara": [
       "asistent-medical",
@@ -1319,6 +1320,7 @@
       "croitor",
       "curatenie",
       "electrician",
+      "inginer",
       "lacatus",
       "mecanic",
       "paznic",
