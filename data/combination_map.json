@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-15T19:48:29.808Z",
-  "totalActiveJobsScanned": 8099,
-  "totalJobsMapped": 5295,
+  "updatedAt": "2026-11-16T09:32:16.529Z",
+  "totalActiveJobsScanned": 7946,
+  "totalJobsMapped": 5212,
   "byTrade": {
     "sofer": [
       "alba",
@@ -351,7 +351,6 @@
       "botosani",
       "braila",
       "bucuresti",
-      "buzau",
       "caras-severin",
       "cluj",
       "constanta",
@@ -483,7 +482,6 @@
       "salaj",
       "sibiu",
       "suceava",
-      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -558,7 +556,6 @@
       "timis",
       "tulcea",
       "valcea",
-      "vaslui",
       "vrancea"
     ],
     "croitor": [
@@ -640,7 +637,6 @@
       "timis",
       "tulcea",
       "valcea",
-      "vaslui",
       "vrancea"
     ],
     "curier": [
@@ -998,7 +994,6 @@
       "operator-cnc",
       "ospatar",
       "sofer",
-      "sudor",
       "vanzator",
       "zidar"
     ],
@@ -1497,7 +1492,6 @@
       "lacatus",
       "mecanic",
       "sofer",
-      "tamplar",
       "vanzator",
       "zidar"
     ],
@@ -1550,10 +1544,8 @@
       "curatenie",
       "electrician",
       "inginer",
-      "lacatus",
       "manipulant",
       "mecanic",
-      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
