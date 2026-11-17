@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-16T23:24:52.649Z",
-  "totalActiveJobsScanned": 8286,
-  "totalJobsMapped": 5458,
+  "updatedAt": "2026-11-17T10:41:44.899Z",
+  "totalActiveJobsScanned": 8159,
+  "totalJobsMapped": 5380,
   "byTrade": {
     "sofer": [
       "alba",
@@ -603,7 +603,6 @@
       "vrancea"
     ],
     "ospatar": [
-      "alba",
       "arad",
       "arges",
       "bacau",
@@ -638,6 +637,7 @@
       "timis",
       "tulcea",
       "valcea",
+      "vaslui",
       "vrancea"
     ],
     "curier": [
@@ -683,7 +683,6 @@
       "maramures",
       "mures",
       "neamt",
-      "olt",
       "prahova",
       "sibiu",
       "suceava",
@@ -792,7 +791,6 @@
       "manipulant",
       "mecanic",
       "operator-cnc",
-      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1374,7 +1372,6 @@
       "zidar"
     ],
     "olt": [
-      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1548,6 +1545,7 @@
       "inginer",
       "manipulant",
       "mecanic",
+      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
