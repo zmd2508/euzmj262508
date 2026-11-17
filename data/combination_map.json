@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-17T10:41:44.899Z",
-  "totalActiveJobsScanned": 8159,
-  "totalJobsMapped": 5380,
+  "updatedAt": "2026-11-17T22:20:54.266Z",
+  "totalActiveJobsScanned": 8488,
+  "totalJobsMapped": 5575,
   "byTrade": {
     "sofer": [
       "alba",
@@ -214,6 +214,7 @@
       "satu-mare",
       "sibiu",
       "suceava",
+      "teleorman",
       "timis",
       "tulcea",
       "valcea",
@@ -315,6 +316,7 @@
       "braila",
       "brasov",
       "bucuresti",
+      "calarasi",
       "cluj",
       "constanta",
       "covasna",
@@ -434,6 +436,7 @@
       "dambovita",
       "dolj",
       "galati",
+      "giurgiu",
       "gorj",
       "harghita",
       "hunedoara",
@@ -463,6 +466,7 @@
       "braila",
       "brasov",
       "bucuresti",
+      "buzau",
       "cluj",
       "constanta",
       "covasna",
@@ -668,12 +672,14 @@
       "bihor",
       "bistrita-nasaud",
       "botosani",
+      "braila",
       "brasov",
       "bucuresti",
       "caras-severin",
       "cluj",
       "constanta",
       "covasna",
+      "dolj",
       "galati",
       "harghita",
       "hunedoara",
@@ -725,6 +731,7 @@
       "neamt",
       "olt",
       "prahova",
+      "salaj",
       "sibiu",
       "suceava",
       "teleorman",
@@ -922,6 +929,7 @@
       "zidar"
     ],
     "braila": [
+      "asistent-medical",
       "bucatar",
       "croitor",
       "curatenie",
@@ -993,6 +1001,7 @@
       "operator-cnc",
       "ospatar",
       "sofer",
+      "tamplar",
       "vanzator",
       "zidar"
     ],
@@ -1024,6 +1033,7 @@
       "inginer",
       "manipulant",
       "mecanic",
+      "paznic",
       "vanzator",
       "zidar"
     ],
@@ -1110,6 +1120,7 @@
       "zidar"
     ],
     "dolj": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1164,6 +1175,7 @@
       "ospatar",
       "paznic",
       "sofer",
+      "stivuitorist",
       "sudor",
       "tamplar",
       "vanzator",
@@ -1425,6 +1437,7 @@
     ],
     "salaj": [
       "bucatar",
+      "contabil",
       "croitor",
       "curatenie",
       "electrician",
@@ -1489,6 +1502,7 @@
       "curier",
       "electrician",
       "lacatus",
+      "manipulant",
       "mecanic",
       "sofer",
       "vanzator",
