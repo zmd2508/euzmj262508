@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-19T10:18:30.102Z",
-  "totalActiveJobsScanned": 8578,
-  "totalJobsMapped": 5649,
+  "updatedAt": "2026-11-19T22:16:56.693Z",
+  "totalActiveJobsScanned": 8850,
+  "totalJobsMapped": 5822,
   "byTrade": {
     "sofer": [
       "alba",
@@ -15,6 +15,7 @@
       "brasov",
       "bucuresti",
       "buzau",
+      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -313,6 +314,7 @@
       "bacau",
       "bihor",
       "bistrita-nasaud",
+      "botosani",
       "braila",
       "brasov",
       "bucuresti",
@@ -327,7 +329,6 @@
       "giurgiu",
       "gorj",
       "hunedoara",
-      "ialomita",
       "iasi",
       "ilfov",
       "maramures",
@@ -342,7 +343,6 @@
       "suceava",
       "teleorman",
       "timis",
-      "tulcea",
       "valcea",
       "vaslui",
       "vrancea"
@@ -384,6 +384,7 @@
     ],
     "zidar": [
       "alba",
+      "arad",
       "arges",
       "bacau",
       "bihor",
@@ -637,6 +638,7 @@
       "maramures",
       "mures",
       "neamt",
+      "olt",
       "prahova",
       "salaj",
       "satu-mare",
@@ -669,6 +671,7 @@
     ],
     "asistent-medical": [
       "alba",
+      "arad",
       "arges",
       "bacau",
       "bihor",
@@ -684,6 +687,7 @@
       "covasna",
       "dolj",
       "galati",
+      "giurgiu",
       "harghita",
       "hunedoara",
       "ialomita",
@@ -809,6 +813,7 @@
       "zidar"
     ],
     "arad": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -825,7 +830,8 @@
       "sofer",
       "stivuitorist",
       "sudor",
-      "vanzator"
+      "vanzator",
+      "zidar"
     ],
     "arges": [
       "asistent-medical",
@@ -923,6 +929,7 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
+      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
@@ -1038,6 +1045,7 @@
       "manipulant",
       "mecanic",
       "paznic",
+      "sofer",
       "vanzator",
       "zidar"
     ],
@@ -1165,6 +1173,7 @@
       "zidar"
     ],
     "giurgiu": [
+      "asistent-medical",
       "bucatar",
       "contabil",
       "croitor",
@@ -1254,7 +1263,6 @@
       "manipulant",
       "mecanic",
       "ospatar",
-      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
@@ -1393,6 +1401,7 @@
       "inginer",
       "manipulant",
       "mecanic",
+      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
@@ -1546,7 +1555,6 @@
       "mecanic",
       "operator-cnc",
       "ospatar",
-      "paznic",
       "sofer",
       "sudor",
       "tamplar",
