@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-19T22:16:56.693Z",
-  "totalActiveJobsScanned": 8850,
-  "totalJobsMapped": 5822,
+  "updatedAt": "2026-11-20T10:05:11.194Z",
+  "totalActiveJobsScanned": 8753,
+  "totalJobsMapped": 5747,
   "byTrade": {
     "sofer": [
       "alba",
@@ -332,7 +332,6 @@
       "iasi",
       "ilfov",
       "maramures",
-      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -717,7 +716,6 @@
       "brasov",
       "bucuresti",
       "buzau",
-      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -1036,7 +1034,6 @@
     "calarasi": [
       "asistent-medical",
       "bucatar",
-      "contabil",
       "croitor",
       "curatenie",
       "curier",
@@ -1343,7 +1340,6 @@
       "inginer",
       "lacatus",
       "mecanic",
-      "paznic",
       "sofer",
       "stivuitorist",
       "sudor",
