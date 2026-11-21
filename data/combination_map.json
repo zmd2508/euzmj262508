@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-21T09:41:40.035Z",
-  "totalActiveJobsScanned": 8779,
-  "totalJobsMapped": 5795,
+  "updatedAt": "2026-11-21T20:36:41.618Z",
+  "totalActiveJobsScanned": 8785,
+  "totalJobsMapped": 5798,
   "byTrade": {
     "sofer": [
       "alba",
@@ -206,6 +206,7 @@
       "iasi",
       "ilfov",
       "maramures",
+      "mehedinti",
       "mures",
       "neamt",
       "olt",
@@ -1342,6 +1343,7 @@
       "electrician",
       "inginer",
       "lacatus",
+      "manipulant",
       "mecanic",
       "sofer",
       "stivuitorist",
