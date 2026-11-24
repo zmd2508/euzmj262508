@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-24T01:42:37.949Z",
-  "totalActiveJobsScanned": 8993,
-  "totalJobsMapped": 5914,
+  "updatedAt": "2026-11-24T12:44:16.098Z",
+  "totalActiveJobsScanned": 8853,
+  "totalJobsMapped": 5825,
   "byTrade": {
     "sofer": [
       "alba",
@@ -686,7 +686,6 @@
       "braila",
       "brasov",
       "bucuresti",
-      "calarasi",
       "caras-severin",
       "cluj",
       "constanta",
@@ -1039,7 +1038,6 @@
       "zidar"
     ],
     "calarasi": [
-      "asistent-medical",
       "bucatar",
       "croitor",
       "curatenie",
