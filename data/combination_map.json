@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-24T23:31:34.095Z",
-  "totalActiveJobsScanned": 9103,
-  "totalJobsMapped": 6006,
+  "updatedAt": "2026-11-25T11:14:31.585Z",
+  "totalActiveJobsScanned": 9008,
+  "totalJobsMapped": 5950,
   "byTrade": {
     "sofer": [
       "alba",
@@ -379,7 +379,6 @@
       "prahova",
       "salaj",
       "sibiu",
-      "suceava",
       "timis",
       "tulcea",
       "valcea",
@@ -655,7 +654,6 @@
       "timis",
       "tulcea",
       "valcea",
-      "vaslui",
       "vrancea"
     ],
     "curier": [
@@ -1517,7 +1515,6 @@
       "ospatar",
       "paznic",
       "sofer",
-      "sudor",
       "tamplar",
       "vanzator",
       "zidar"
@@ -1588,7 +1585,6 @@
       "inginer",
       "manipulant",
       "mecanic",
-      "ospatar",
       "paznic",
       "sofer",
       "stivuitorist",
