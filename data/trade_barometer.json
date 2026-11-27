@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-27T10:51:29.379Z",
-  "analyzedJobs": 8294,
+  "updatedAt": "2026-11-27T22:43:48.768Z",
+  "analyzedJobs": 8557,
   "source": "euzmj_scraper",
   "trades": {
     "sofer": {
       "tradeSlug": "sofer",
       "label": "Șofer",
-      "sampleSize": 439,
+      "sampleSize": 451,
       "hasSufficientData": true,
       "categoryType": "transport",
       "needleAngle": 15,
@@ -28,7 +28,7 @@
     "mecanic": {
       "tradeSlug": "mecanic",
       "label": "Mecanic",
-      "sampleSize": 343,
+      "sampleSize": 355,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 25,
@@ -38,19 +38,19 @@
       "grossLegal": 4350,
       "p25": 2700,
       "median": 2850,
-      "p75": 3200,
+      "p75": 3150,
       "entryRange": "~2.700 – 3.200 lei",
       "experiencedRange": "~3.200 – 4.000 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~2.700 – 3.200 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~2.850 lei net</strong>, iar uneori poate chiar depăși <strong>~3.200 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~2.850 lei net</strong>, iar uneori poate chiar depăși <strong>~3.150 lei net</strong> în unele companii mari sau industriale."
       }
     },
     "vanzator": {
       "tradeSlug": "vanzator",
       "label": "Vânzător",
-      "sampleSize": 753,
+      "sampleSize": 781,
       "hasSufficientData": true,
       "categoryType": "minimum_wage",
       "needleAngle": -45,
@@ -72,7 +72,7 @@
     "bucatar": {
       "tradeSlug": "bucatar",
       "label": "Bucătar",
-      "sampleSize": 534,
+      "sampleSize": 549,
       "hasSufficientData": true,
       "categoryType": "horeca",
       "needleAngle": 20,
@@ -94,7 +94,7 @@
     "manipulant": {
       "tradeSlug": "manipulant",
       "label": "Manipulant marfă",
-      "sampleSize": 483,
+      "sampleSize": 489,
       "hasSufficientData": true,
       "categoryType": "minimum_wage",
       "needleAngle": -40,
@@ -116,7 +116,7 @@
     "electrician": {
       "tradeSlug": "electrician",
       "label": "Electrician",
-      "sampleSize": 291,
+      "sampleSize": 301,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 30,
@@ -126,19 +126,19 @@
       "grossLegal": 4350,
       "p25": 2800,
       "median": 3150,
-      "p75": 3650,
+      "p75": 3750,
       "entryRange": "~2.800 – 3.300 lei",
       "experiencedRange": "~3.500 – 4.500 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~2.800 – 3.300 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.150 lei net</strong>, iar uneori poate chiar depăși <strong>~3.650 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.150 lei net</strong>, iar uneori poate chiar depăși <strong>~3.750 lei net</strong> în unele companii mari sau industriale."
       }
     },
     "curatenie": {
       "tradeSlug": "curatenie",
       "label": "Curățenie / Menaj",
-      "sampleSize": 732,
+      "sampleSize": 754,
       "hasSufficientData": true,
       "categoryType": "minimum_wage",
       "needleAngle": -50,
@@ -160,7 +160,7 @@
     "paznic": {
       "tradeSlug": "paznic",
       "label": "Paznic / Securitate",
-      "sampleSize": 202,
+      "sampleSize": 210,
       "hasSufficientData": true,
       "categoryType": "minimum_wage",
       "needleAngle": -45,
@@ -182,7 +182,7 @@
     "sudor": {
       "tradeSlug": "sudor",
       "label": "Sudor",
-      "sampleSize": 128,
+      "sampleSize": 133,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 25,
@@ -204,7 +204,7 @@
     "zidar": {
       "tradeSlug": "zidar",
       "label": "Zidar / Constructor",
-      "sampleSize": 321,
+      "sampleSize": 332,
       "hasSufficientData": true,
       "categoryType": "construction",
       "needleAngle": -10,
@@ -226,7 +226,7 @@
     "stivuitorist": {
       "tradeSlug": "stivuitorist",
       "label": "Stivuitorist",
-      "sampleSize": 111,
+      "sampleSize": 110,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 15,
@@ -235,20 +235,20 @@
       "minLegalNet": 2700,
       "grossLegal": 4350,
       "p25": 2700,
-      "median": 3150,
+      "median": 3100,
       "p75": 3500,
       "entryRange": "~2.700 – 3.200 lei",
       "experiencedRange": "~3.400 – 4.250 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~2.700 – 3.200 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.150 lei net</strong>, iar uneori poate chiar depăși <strong>~3.500 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.100 lei net</strong>, iar uneori poate chiar depăși <strong>~3.500 lei net</strong> în unele companii mari sau industriale."
       }
     },
     "tamplar": {
       "tradeSlug": "tamplar",
       "label": "Tâmplar",
-      "sampleSize": 150,
+      "sampleSize": 153,
       "hasSufficientData": true,
       "categoryType": "construction",
       "needleAngle": -5,
@@ -270,7 +270,7 @@
     "operator-cnc": {
       "tradeSlug": "operator-cnc",
       "label": "Operator CNC",
-      "sampleSize": 120,
+      "sampleSize": 123,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 20,
@@ -280,19 +280,19 @@
       "grossLegal": 4350,
       "p25": 2700,
       "median": 2850,
-      "p75": 3500,
+      "p75": 3400,
       "entryRange": "~2.700 – 3.200 lei",
       "experiencedRange": "~3.200 – 4.150 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~2.700 – 3.200 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~2.850 lei net</strong>, iar uneori poate chiar depăși <strong>~3.500 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~2.850 lei net</strong>, iar uneori poate chiar depăși <strong>~3.400 lei net</strong> în unele companii mari sau industriale."
       }
     },
     "lacatus": {
       "tradeSlug": "lacatus",
       "label": "Lăcătuș mecanic",
-      "sampleSize": 123,
+      "sampleSize": 127,
       "hasSufficientData": true,
       "categoryType": "construction",
       "needleAngle": -10,
@@ -314,7 +314,7 @@
     "croitor": {
       "tradeSlug": "croitor",
       "label": "Croitor / Confecționer",
-      "sampleSize": 228,
+      "sampleSize": 235,
       "hasSufficientData": true,
       "categoryType": "minimum_wage",
       "needleAngle": -45,
@@ -336,7 +336,7 @@
     "ospatar": {
       "tradeSlug": "ospatar",
       "label": "Ospătar / Chelner",
-      "sampleSize": 155,
+      "sampleSize": 161,
       "hasSufficientData": true,
       "categoryType": "horeca",
       "needleAngle": 15,
@@ -358,7 +358,7 @@
     "curier": {
       "tradeSlug": "curier",
       "label": "Curier / Livrator",
-      "sampleSize": 93,
+      "sampleSize": 96,
       "hasSufficientData": true,
       "categoryType": "curier",
       "needleAngle": 15,
@@ -380,7 +380,7 @@
     "asistent-medical": {
       "tradeSlug": "asistent-medical",
       "label": "Asistent medical",
-      "sampleSize": 227,
+      "sampleSize": 226,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 20,
@@ -402,7 +402,7 @@
     "contabil": {
       "tradeSlug": "contabil",
       "label": "Contabil / Financiar",
-      "sampleSize": 142,
+      "sampleSize": 151,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 45,
@@ -411,20 +411,20 @@
       "minLegalNet": 2700,
       "grossLegal": 4350,
       "p25": 2700,
-      "median": 3250,
+      "median": 3350,
       "p75": 4600,
       "entryRange": "~2.700 – 3.200 lei",
       "experiencedRange": "~3.700 – 5.550 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~2.700 – 3.200 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.250 lei net</strong>, iar uneori poate chiar depăși <strong>~4.600 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.350 lei net</strong>, iar uneori poate chiar depăși <strong>~4.600 lei net</strong> în unele companii mari sau industriale."
       }
     },
     "inginer": {
       "tradeSlug": "inginer",
       "label": "Inginer",
-      "sampleSize": 306,
+      "sampleSize": 323,
       "hasSufficientData": true,
       "categoryType": "skilled",
       "needleAngle": 55,
@@ -433,14 +433,14 @@
       "minLegalNet": 2700,
       "grossLegal": 4350,
       "p25": 3050,
-      "median": 3500,
+      "median": 3600,
       "p75": 4800,
       "entryRange": "~3.050 – 3.550 lei",
       "experiencedRange": "~4.000 – 5.750 lei",
       "narrative": {
         "p1": "În ofertele din piață, salariile de pornire pentru debutanți încep de regulă de la <strong>~3.050 – 3.550 lei</strong> pe contract.",
         "p2": "La care se pot adăuga tichete de masă, bonusuri de performanță sau sporuri de tură/noapte, în funcție de companie.",
-        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.500 lei net</strong>, iar uneori poate chiar depăși <strong>~4.800 lei net</strong> în unele companii mari sau industriale."
+        "p3": "Pentru specialiști cu experiență sau autorizații recunoscute, mediana pieței ajunge la <strong>~3.600 lei net</strong>, iar uneori poate chiar depăși <strong>~4.800 lei net</strong> în unele companii mari sau industriale."
       }
     }
   }
